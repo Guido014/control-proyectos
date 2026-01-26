@@ -351,11 +351,11 @@
     const fClient = document.getElementById('filterClient').value;
 
     let filtered = timeRecords.filter(r => {
-        // Aseguramos que la fecha exista antes de cortarla
-        const rDate = r.date ? r.date.toString() : ""; 
+        // Usamos "Fecha" con F mayúscula porque así debe estar en tu Excel
+        const rDate = r.Fecha ? r.Fecha.toString() : ""; 
         const matchYear = !fYear || rDate.substring(0, 4) === fYear;
         const matchMonth = !fMonth || rDate.substring(5, 7) === fMonth;
-        const matchClient = !fClient || r.client === fClient;
+        const matchClient = !fClient || r.Cliente === fClient;
         return matchYear && matchMonth && matchClient;
     });
 
@@ -367,17 +367,17 @@
     container.innerHTML = filtered.map(r => `
         <div class="record-item">
             <div class="record-item-header">
-                <span class="record-client">${r.client || 'Sin Cliente'}</span>
-                <span class="record-hours">${r.hours || 0}h</span>
+                <span class="record-client">${r.Cliente || 'Sin Cliente'}</span>
+                <span class="record-hours">${r.Horas || 0}h</span>
             </div>
             <div class="record-details">
-                📅 ${r.date || '---'} | ${r.type === 'Remoto' ? '🏠' : '🏢'} ${r.type || '---'}
-                ${r.requester ? '<br>👤 ' + r.requester : ''}
-                ${r.description ? '<br>📝 ' + r.description : ''}
+                📅 ${r.Fecha || '---'} | ${r.Tipo === 'Remoto' ? '🏠' : '🏢'} ${r.Tipo || '---'}
+                ${r.Solicitante ? '<br>👤 ' + r.Solicitante : ''}
+                ${r.Descripción ? '<br>📝 ' + r.Descripción : ''}
             </div>
         </div>
     `).join('');
-}
+}}
         function updateStats() {
             const fYear = document.getElementById('filterYear').value;
             const fMonth = document.getElementById('filterMonth').value;

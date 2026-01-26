@@ -1,422 +1,58 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Proyectos</title>
+    <title>Control Proyectos</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .header h1 { color: #333; font-size: 2em; margin-bottom: 10px; }
-        .sync-status {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }
-        .sync-status.connected { background: #d4edda; color: #155724; }
-        .sync-status.syncing { background: #fff3cd; color: #856404; }
-        .sync-status.error { background: #f8d7da; color: #721c24; }
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .card h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 10px;
-        }
-        .form-group { margin-bottom: 20px; }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 600;
-            font-size: 0.95em;
-        }
-        label .optional { font-weight: 400; color: #999; font-size: 0.9em; }
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: all 0.3s;
-        }
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        textarea { resize: vertical; min-height: 80px; }
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .stats-section {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 30px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        .stat-card h3 { font-size: 2.5em; margin-bottom: 10px; }
-        .stat-card p { font-size: 1em; opacity: 0.9; }
-        .filters {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .records-list { max-height: 600px; overflow-y: auto; }
-        .record-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 4px solid #667eea;
-        }
-        .record-item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        .record-client { font-weight: 600; color: #333; font-size: 1.1em; }
-        .record-hours {
-            background: #667eea;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-        .record-details { color: #666; font-size: 0.9em; }
-        .export-btn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-        }
-        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
-        @media (max-width: 768px) {
-            .main-content { grid-template-columns: 1fr; }
-            .stats-grid { grid-template-columns: 1fr; }
-            .filters { grid-template-columns: 1fr; }
-        }
+        body { font-family: sans-serif; padding: 20px; background: #eee; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .record { border-bottom: 1px solid #ddd; padding: 10px; }
+        .total { font-size: 24px; font-weight: bold; color: #007bff; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Control de Proyectos</h1>
-            <p>Registro de Horas Facturables - Sincronizado con Google Sheets</p>
-            <div id="syncStatus" class="sync-status syncing">🔄 Iniciando...</div>
-        </div>
-
-        <div class="main-content">
-            <div class="card">
-                <h2>➕ Registrar Horas</h2>
-                <form id="timeForm">
-                    <div class="form-group">
-                        <label for="client">Cliente *</label>
-                        <select id="client" required>
-                            <option value="">Seleccionar cliente...</option>
-                            <option value="ROSSI">ROSSI</option>
-                            <option value="NIP">NIP</option>
-                            <option value="BROUWER">BROUWER</option>
-                            <option value="FONTANELLA">FONTANELLA</option>
-                            <option value="LABORATORIOS ARRAYANES">LABORATORIOS ARRAYANES</option>
-                            <option value="LAM">LAM</option>
-                            <option value="FRIOPACK">FRIOPACK</option>
-                            <option value="PYP">PYP</option>
-                            <option value="HIT">HIT</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="date">Fecha *</label>
-                        <input type="date" id="date" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="hours">Horas *</label>
-                        <input type="number" id="hours" step="0.5" min="0.5" max="24" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="type">Tipo *</label>
-                        <select id="type" required>
-                            <option value="Remoto">🏠 Remoto</option>
-                            <option value="Presencial">🏢 Presencial</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="requester">Quién lo solicitó <span class="optional">(opcional)</span></label>
-                        <input type="text" id="requester" placeholder="Ej: Juan Pérez">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="description">Descripción <span class="optional">(opcional)</span></label>
-                        <textarea id="description" placeholder="Detalles..."></textarea>
-                    </div>
-
-                    <button type="submit" class="btn" id="submitBtn">💾 Guardar</button>
-                </form>
-            </div>
-
-            <div class="card">
-                <h2>📈 Resumen</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3 id="totalHours">0.0</h3>
-                        <p>Horas</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="totalClients">0</h3>
-                        <p>Clientes</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="totalRecords">0</h3>
-                        <p>Registros</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="stats-section">
-            <h2>📋 Registros</h2>
-            <div class="filters">
-                <select id="filterYear">
-                    <option value="">Todos los años</option>
-                    <option value="2026" selected>2026</option>
-                    <option value="2025">2025</option>
-                </select>
-                <select id="filterMonth">
-                    <option value="">Todos los meses</option>
-                    <option value="01">Enero</option>
-                    <option value="02">Febrero</option>
-                    <option value="03">Marzo</option>
-                    <option value="04">Abril</option>
-                    <option value="05">Mayo</option>
-                    <option value="06">Junio</option>
-                    <option value="07">Julio</option>
-                    <option value="08">Agosto</option>
-                    <option value="09">Septiembre</option>
-                    <option value="10">Octubre</option>
-                    <option value="11">Noviembre</option>
-                    <option value="12">Diciembre</option>
-                </select>
-                <select id="filterClient">
-                    <option value="">Todos los clientes</option>
-                </select>
-            </div>
-            <div id="recordsList" class="records-list"></div>
-            <button class="export-btn" onclick="exportToCSV()">📥 Exportar CSV</button>
-        </div>
+    <div class="card">
+        <h1>Horas Totales: <span id="totalH">0</span></h1>
+        <select id="fYear" onchange="render()"><option value="2026">2026</option><option value="2025">2025</option></select>
+        <div id="status">Cargando...</div>
     </div>
+    <div class="card" id="lista"></div>
 
     <script>
-    // PEGA AQUÍ TU NUEVA URL DE GOOGLE
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJPLpeRYODA9gRq0Zwcl8pLEkTdnUUKuhmTgz-chMaieGF_pK6gAs3_VwORKyFzx68/exec'; 
-    let timeRecords = [];
+        // PEGA TU URL AQUÍ ABAJO
+        const URL = 'https://script.google.com/macros/s/AKfycbx6Ke0I9cKWwamrSUuI9Q2s8VgZZjRUMV9KJXBtBp_TmAxhrvAIOKcg4FZNAlw3Gpmz/exec'; 
+        let datos = [];
 
-    document.getElementById('date').valueAsDate = new Date();
-
-    async function loadRecords() {
-        try {
-            updateSyncStatus('syncing', '🔄 Cargando datos...');
-            const response = await fetch(SCRIPT_URL);
-            const data = await response.json();
-            timeRecords = Array.isArray(data) ? data : [];
-            renderRecords();
-            updateStats();
-            populateClientFilter();
-            updateSyncStatus('connected', `✅ Conectado (${timeRecords.length})`);
-        } catch (error) {
-            updateSyncStatus('error', '❌ Error de conexión');
-        }
-    }
-
-    function updateSyncStatus(status, text) {
-        const el = document.getElementById('syncStatus');
-        el.className = `sync-status ${status}`;
-        el.textContent = text;
-    }
-
-    document.getElementById('timeForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('submitBtn');
-        btn.disabled = true;
-        btn.textContent = '⏳ Guardando...';
-
-        const record = {
-            date: document.getElementById('date').value,
-            client: document.getElementById('client').value,
-            hours: parseFloat(document.getElementById('hours').value),
-            type: document.getElementById('type').value,
-            requester: document.getElementById('requester').value.trim(),
-            description: document.getElementById('description').value.trim()
-        };
-
-        try {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify(record)
-            });
-            const result = await response.json();
-            if (result.success) {
-                this.reset();
-                document.getElementById('date').valueAsDate = new Date();
-                await loadRecords();
-                alert('✅ Guardado en Excel');
+        async function cargar() {
+            try {
+                const res = await fetch(URL);
+                datos = await res.json();
+                document.getElementById('status').innerText = 'Conectado: ' + datos.length + ' registros';
+                render();
+            } catch (e) {
+                document.getElementById('status').innerText = 'Error de conexión';
             }
-        } catch (error) {
-            alert('❌ Error al guardar');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = '💾 Guardar';
         }
-    });
 
-    function renderRecords() {
-    const container = document.getElementById('recordsList');
-    const fYear = document.getElementById('filterYear').value;
-    const fMonth = document.getElementById('filterMonth').value;
-    const fClient = document.getElementById('filterClient').value;
+        function render() {
+            const year = document.getElementById('fYear').value;
+            const lista = document.getElementById('lista');
+            
+            const filtrados = datos.filter(d => String(d.fecha).includes(year));
+            
+            let suma = 0;
+            lista.innerHTML = filtrados.map(d => {
+                suma += parseFloat(d.horas);
+                return `<div class="record">
+                    <strong>${d.cliente || 'Sin Nombre'}</strong>: ${d.horas}h <br>
+                    <small>${d.fecha} | ${d.tipo}</small>
+                </div>`;
+            }).join('') || 'No hay datos para este año';
+            
+            document.getElementById('totalH').innerText = suma;
+        }
 
-    let filtered = timeRecords.filter(r => {
-        const rDate = String(r.fecha); 
-        // Si el filtro de año está vacío o la fecha lo contiene
-        const matchYear = !fYear || rDate.includes(fYear);
-        // Si el filtro de mes está vacío o la fecha lo contiene (ej: -01-)
-        const matchMonth = !fMonth || rDate.includes("-" + fMonth);
-        const matchClient = !fClient || r.cliente === fClient;
-        return matchYear && matchMonth && matchClient;
-    });
-
-    if (filtered.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>No hay registros para este filtro</p></div>';
-        updateStats(filtered); // Actualizar los cuadritos de arriba a 0
-        return;
-    }
-
-    container.innerHTML = filtered.map(r => `
-        <div class="record-item">
-            <div class="record-item-header">
-                <span class="record-client">${r.cliente || 'Sin nombre'}</span>
-                <span class="record-hours">${r.horas}h</span>
-            </div>
-            <div class="record-details">
-                📅 ${r.fecha.split(' ')[0]} | ${r.tipo}
-                ${r.solicitante ? '<br>👤 ' + r.solicitante : ''}
-                ${r.descripcion ? '<br>📝 ' + r.descripcion : ''}
-            </div>
-        </div>
-    `).join('');
-    
-    updateStats(filtered);
-}
-
-function updateStats(dataArray) {
-    const totalH = dataArray.reduce((s, r) => s + (parseFloat(r.horas) || 0), 0);
-    const totalC = new Set(dataArray.map(r => r.cliente)).size;
-
-    document.getElementById('totalHours').textContent = totalH.toFixed(1);
-    document.getElementById('totalClients').textContent = totalC;
-    document.getElementById('totalRecords').textContent = dataArray.length;
-}
-
-    function populateClientFilter() {
-        const clients = [...new Set(timeRecords.map(r => r.Cliente))].filter(Boolean).sort();
-        const select = document.getElementById('filterClient');
-        const current = select.value;
-        select.innerHTML = '<option value="">Todos los clientes</option>' + 
-            clients.map(c => `<option value="${c}">${c}</option>`).join('');
-        select.value = current;
-    }
-
-    function exportToCSV() {
-        if (timeRecords.length === 0) return alert('No hay datos');
-        let csv = 'Fecha,Cliente,Horas,Tipo,Solicitante,Descripcion\n';
-        timeRecords.forEach(r => {
-            const d = (r.Descripción || '').replace(/,/g, ';');
-            const q = (r.Solicitante || '').replace(/,/g, ';');
-            csv += `${r.Fecha},${r.Cliente},${r.Horas},${r.Tipo},${q},${d}\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `reporte.csv`;
-        link.click();
-    }
-
-    document.querySelectorAll('.filters select').forEach(s => {
-        s.addEventListener('change', () => {
-            renderRecords();
-            updateStats();
-        });
-    });
-
-    loadRecords();
-</script>
+        cargar();
+    </script>
 </body>
 </html>

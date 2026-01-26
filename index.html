@@ -345,22 +345,24 @@
 
     let filtered = timeRecords.filter(r => {
         const rDate = String(r.fecha); 
+        // Si el filtro de año está vacío o la fecha lo contiene
         const matchYear = !fYear || rDate.includes(fYear);
-        // Filtro de mes más flexible (busca el número entre guiones o barras)
-        const matchMonth = !fMonth || rDate.includes("-" + fMonth) || rDate.includes("/" + fMonth);
+        // Si el filtro de mes está vacío o la fecha lo contiene (ej: -01-)
+        const matchMonth = !fMonth || rDate.includes("-" + fMonth);
         const matchClient = !fClient || r.cliente === fClient;
         return matchYear && matchMonth && matchClient;
     });
 
     if (filtered.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>No hay registros para este filtro</p></div>';
+        updateStats(filtered); // Actualizar los cuadritos de arriba a 0
         return;
     }
 
     container.innerHTML = filtered.map(r => `
         <div class="record-item">
             <div class="record-item-header">
-                <span class="record-client">${r.cliente}</span>
+                <span class="record-client">${r.cliente || 'Sin nombre'}</span>
                 <span class="record-hours">${r.horas}h</span>
             </div>
             <div class="record-details">
@@ -370,23 +372,18 @@
             </div>
         </div>
     `).join('');
+    
+    updateStats(filtered);
 }
 
-    function updateStats() {
-        const fYear = document.getElementById('filterYear').value;
-        const fMonth = document.getElementById('filterMonth').value;
-        let filtered = timeRecords.filter(r => {
-            const rawDate = (r.Fecha || "").toString();
-            const matchYear = !fYear || rawDate.includes(fYear);
-            const matchMonth = !fMonth || rawDate.includes("-" + fMonth + "-") || rawDate.includes("/" + fMonth + "/");
-            return matchYear && matchMonth;
-        });
-        const totalH = filtered.reduce((s, r) => s + (parseFloat(r.Horas) || 0), 0);
-        const totalC = new Set(filtered.map(r => r.Cliente)).size;
-        document.getElementById('totalHours').textContent = totalH.toFixed(1);
-        document.getElementById('totalClients').textContent = totalC;
-        document.getElementById('totalRecords').textContent = filtered.length;
-    }
+function updateStats(dataArray) {
+    const totalH = dataArray.reduce((s, r) => s + (parseFloat(r.horas) || 0), 0);
+    const totalC = new Set(dataArray.map(r => r.cliente)).size;
+
+    document.getElementById('totalHours').textContent = totalH.toFixed(1);
+    document.getElementById('totalClients').textContent = totalC;
+    document.getElementById('totalRecords').textContent = dataArray.length;
+}
 
     function populateClientFilter() {
         const clients = [...new Set(timeRecords.map(r => r.Cliente))].filter(Boolean).sort();

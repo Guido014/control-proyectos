@@ -244,17 +244,15 @@
 
         <div class="stats-section">
             <h2>📋 Registros</h2>
-            
             <div class="filters">
                 <select id="filterYear">
-                    <option value="">Todos</option>
+                    <option value="">Todos los años</option>
                     <option value="2026" selected>2026</option>
                     <option value="2025">2025</option>
                 </select>
-                
                 <select id="filterMonth">
-                    <option value="">Todos</option>
-                    <option value="01" selected>Enero</option>
+                    <option value="">Todos los meses</option>
+                    <option value="01">Enero</option>
                     <option value="02">Febrero</option>
                     <option value="03">Marzo</option>
                     <option value="04">Abril</option>
@@ -267,44 +265,37 @@
                     <option value="11">Noviembre</option>
                     <option value="12">Diciembre</option>
                 </select>
-                
                 <select id="filterClient">
-                    <option value="">Todos</option>
+                    <option value="">Todos los clientes</option>
                 </select>
             </div>
-
             <div id="recordsList" class="records-list"></div>
-            <button class="export-btn" onclick="exportToExcel()">📥 Exportar</button>
+            <button class="export-btn" onclick="exportToCSV()">📥 Exportar CSV</button>
         </div>
     </div>
 
     <script>
+        // URL de tu Google Apps Script
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3Q29GfibXpKj9SIv0ZKnD0gHsywGLDeCEB4iQ8o8nUIgM8n-sQEF53s-9G6yUFAPj/exec';
         let timeRecords = [];
 
+        // Inicializar fecha de hoy
         document.getElementById('date').valueAsDate = new Date();
 
         async function loadRecords() {
             try {
-                updateSyncStatus('syncing', '🔄 Cargando...');
-                console.log('Fetching from:', SCRIPT_URL);
-                
+                updateSyncStatus('syncing', '🔄 Cargando datos...');
                 const response = await fetch(SCRIPT_URL);
-                console.log('Response status:', response.status);
-                
                 const data = await response.json();
-                console.log('Data received:', data);
                 
                 timeRecords = Array.isArray(data) ? data : [];
-                
                 renderRecords();
                 updateStats();
                 populateClientFilter();
                 updateSyncStatus('connected', `✅ Conectado (${timeRecords.length} registros)`);
             } catch (error) {
-                console.error('Error loading:', error);
-                updateSyncStatus('error', '❌ Error: ' + error.message);
-                timeRecords = [];
+                console.error('Error:', error);
+                updateSyncStatus('error', '❌ Error de conexión');
             }
         }
 
@@ -316,7 +307,6 @@
 
         document.getElementById('timeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = '⏳ Guardando...';
@@ -332,28 +322,22 @@
             };
 
             try {
-                console.log('Sending:', record);
-                
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify(record)
                 });
-
-                console.log('POST response:', response.status);
                 const result = await response.json();
-                console.log('Result:', result);
                 
                 if (result.success) {
                     this.reset();
                     document.getElementById('date').valueAsDate = new Date();
                     await loadRecords();
-                    alert('✅ Guardado!');
+                    alert('✅ Registro guardado correctamente');
                 } else {
-                    alert('❌ Error: ' + (result.error || 'Desconocido'));
+                    throw new Error(result.error);
                 }
             } catch (error) {
-                console.error('Error saving:', error);
-                alert('❌ Error: ' + error.message);
+                alert('❌ Error al guardar: ' + error.message);
             } finally {
                 btn.disabled = false;
                 btn.textContent = '💾 Guardar';
@@ -362,26 +346,20 @@
 
         function renderRecords() {
             const container = document.getElementById('recordsList');
-            const filterYear = document.getElementById('filterYear').value;
-            const filterMonth = document.getElementById('filterMonth').value;
-            const filterClient = document.getElementById('filterClient').value;
+            const fYear = document.getElementById('filterYear').value;
+            const fMonth = document.getElementById('filterMonth').value;
+            const fClient = document.getElementById('filterClient').value;
 
-            let filtered = timeRecords;
-
-            if (filterYear) {
-                filtered = filtered.filter(r => r.date && r.date.toString().substring(0, 4) === filterYear);
-            }
-
-            if (filterMonth) {
-                filtered = filtered.filter(r => r.date && r.date.toString().substring(5, 7) === filterMonth);
-            }
-
-            if (filterClient) {
-                filtered = filtered.filter(r => r.client === filterClient);
-            }
+            let filtered = timeRecords.filter(r => {
+                const rDate = r.date ? r.date.toString() : "";
+                const matchYear = !fYear || rDate.substring(0, 4) === fYear;
+                const matchMonth = !fMonth || rDate.substring(5, 7) === fMonth;
+                const matchClient = !fClient || r.client === fClient;
+                return matchYear && matchMonth && matchClient;
+            });
 
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-state"><p>No hay registros</p></div>';
+                container.innerHTML = '<div class="empty-state"><p>No hay registros que coincidan</p></div>';
                 return;
             }
 
@@ -401,63 +379,56 @@
         }
 
         function updateStats() {
-            const filterYear = document.getElementById('filterYear').value;
-            const filterMonth = document.getElementById('filterMonth').value;
-            let filtered = timeRecords;
+            const fYear = document.getElementById('filterYear').value;
+            const fMonth = document.getElementById('filterMonth').value;
+            
+            let filtered = timeRecords.filter(r => {
+                const rDate = r.date ? r.date.toString() : "";
+                const matchYear = !fYear || rDate.substring(0, 4) === fYear;
+                const matchMonth = !fMonth || rDate.substring(5, 7) === fMonth;
+                return matchYear && matchMonth;
+            });
 
-            if (filterYear) {
-                filtered = filtered.filter(r => r.date && r.date.toString().substring(0, 4) === filterYear);
-            }
+            const totalH = filtered.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0);
+            const totalC = new Set(filtered.map(r => r.client)).size;
 
-            if (filterMonth) {
-                filtered = filtered.filter(r => r.date && r.date.toString().substring(5, 7) === filterMonth);
-            }
-
-            const totalHours = filtered.reduce((sum, r) => sum + (parseFloat(r.hours) || 0), 0);
-            const uniqueClients = new Set(filtered.map(r => r.client)).size;
-
-            document.getElementById('totalHours').textContent = totalHours.toFixed(1);
-            document.getElementById('totalClients').textContent = uniqueClients;
+            document.getElementById('totalHours').textContent = totalH.toFixed(1);
+            document.getElementById('totalClients').textContent = totalC;
             document.getElementById('totalRecords').textContent = filtered.length;
         }
 
         function populateClientFilter() {
             const clients = [...new Set(timeRecords.map(r => r.client))].sort();
             const select = document.getElementById('filterClient');
-            select.innerHTML = '<option value="">Todos</option>' + 
+            const current = select.value;
+            select.innerHTML = '<option value="">Todos los clientes</option>' + 
                 clients.map(c => `<option value="${c}">${c}</option>`).join('');
+            select.value = current;
         }
 
-        function exportToExcel() {
-            if (timeRecords.length === 0) {
-                alert('No hay registros');
-                return;
-            }
-
-            let csv = 'Fecha,Cliente,Horas,Tipo,Solicitante,Descripción\n';
+        function exportToCSV() {
+            if (timeRecords.length === 0) return alert('No hay datos');
+            let csv = 'Fecha,Cliente,Horas,Tipo,Solicitante,Descripcion\n';
             timeRecords.forEach(r => {
-                csv += `${r.date},${r.client},${r.hours},${r.type},"${r.requester || ''}","${r.description || '"}"\n`;
+                const d = (r.description || '').replace(/,/g, ';');
+                const q = (r.requester || '').replace(/,/g, ';');
+                csv += `${r.date},${r.client},${r.hours},${r.type},${q},${d}\n`;
             });
-
-            const blob = new Blob([csv], { type: 'text/csv' });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'control_proyectos.csv';
+            link.download = `reporte_horas_${new Date().toISOString().split('T')[0]}.csv`;
             link.click();
         }
 
-        document.getElementById('filterYear').addEventListener('change', () => {
-            renderRecords();
-            updateStats();
-        });
-        
-        document.getElementById('filterMonth').addEventListener('change', () => {
-            renderRecords();
-            updateStats();
+        document.querySelectorAll('.filters select').forEach(s => {
+            s.addEventListener('change', () => {
+                renderRecords();
+                updateStats();
+            });
         });
 
-        document.getElementById('filterClient').addEventListener('change', renderRecords);
-
+        // Carga inicial
         loadRecords();
     </script>
 </body>

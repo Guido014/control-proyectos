@@ -338,38 +338,39 @@
     });
 
     function renderRecords() {
-        const container = document.getElementById('recordsList');
-        const fYear = document.getElementById('filterYear').value;
-        const fMonth = document.getElementById('filterMonth').value;
-        const fClient = document.getElementById('filterClient').value;
+    const container = document.getElementById('recordsList');
+    const fYear = document.getElementById('filterYear').value;
+    const fMonth = document.getElementById('filterMonth').value;
+    const fClient = document.getElementById('filterClient').value;
 
-        let filtered = timeRecords.filter(r => {
-            const rawDate = (r.Fecha || "").toString(); 
-            const matchYear = !fYear || rawDate.includes(fYear);
-            const matchMonth = !fMonth || rawDate.includes("-" + fMonth + "-") || rawDate.includes("/" + fMonth + "/");
-            const matchClient = !fClient || r.Cliente === fClient;
-            return matchYear && matchMonth && matchClient;
-        });
+    let filtered = timeRecords.filter(r => {
+        // Ahora usamos nombres fijos en minúsculas
+        const rawDate = (r.fecha || "").toString(); 
+        const matchYear = !fYear || rawDate.includes(fYear);
+        const matchMonth = !fMonth || rawDate.includes("-" + fMonth + "-") || rawDate.includes("/" + fMonth + "/");
+        const matchClient = !fClient || r.cliente === fClient;
+        return matchYear && matchMonth && matchClient;
+    });
 
-        if (filtered.length === 0) {
-            container.innerHTML = '<div class="empty-state"><p>No hay registros</p></div>';
-            return;
-        }
-
-        container.innerHTML = filtered.map(r => `
-            <div class="record-item">
-                <div class="record-item-header">
-                    <span class="record-client">${r.Cliente || 'Sin nombre'}</span>
-                    <span class="record-hours">${r.Horas || 0}h</span>
-                </div>
-                <div class="record-details">
-                    📅 ${r.Fecha ? r.Fecha.toString().split('T')[0] : '---'} | ${r.Tipo || '---'}
-                    ${r.Solicitante ? '<br>👤 ' + r.Solicitante : ''}
-                    ${r.Descripción ? '<br>📝 ' + r.Descripción : ''}
-                </div>
-            </div>
-        `).join('');
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No hay registros</p></div>';
+        return;
     }
+
+    container.innerHTML = filtered.map(r => `
+        <div class="record-item">
+            <div class="record-item-header">
+                <span class="record-client">${r.cliente || 'Sin nombre'}</span>
+                <span class="record-hours">${r.horas || 0}h</span>
+            </div>
+            <div class="record-details">
+                📅 ${r.fecha ? r.fecha.toString().split('T')[0] : '---'} | ${r.tipo || '---'}
+                ${r.solicitante ? '<br>👤 ' + r.solicitante : ''}
+                ${r.descripcion ? '<br>📝 ' + r.descripcion : ''}
+            </div>
+        </div>
+    `).join('');
+}
 
     function updateStats() {
         const fYear = document.getElementById('filterYear').value;

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Proyectos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .header h1 { color: #333; font-size: 2em; margin-bottom: 10px; }
+        .sync-status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        .sync-status.connected { background: #d4edda; color: #155724; }
+        .sync-status.syncing { background: #fff3cd; color: #856404; }
+        .sync-status.error { background: #f8d7da; color: #721c24; }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .form-group { margin-bottom: 20px; }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        label .optional { font-weight: 400; color: #999; font-size: 0.9em; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        textarea { resize: vertical; min-height: 80px; }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .stats-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-card h3 { font-size: 2.5em; margin-bottom: 10px; }
+        .stat-card p { font-size: 1em; opacity: 0.9; }
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .records-list { max-height: 600px; overflow-y: auto; }
+        .record-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .record-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .record-client { font-weight: 600; color: #333; font-size: 1.1em; }
+        .record-hours {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .record-details { color: #666; font-size: 0.9em; }
+        .export-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .filters { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Control de Proyectos</h1>
+            <p>Registro de Horas Facturables - Sincronizado con Google Sheets</p>
+            <div id="syncStatus" class="sync-status syncing">🔄 Iniciando...</div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>➕ Registrar Horas</h2>
+                <form id="timeForm">
+                    <div class="form-group">
+                        <label for="client">Cliente *</label>
+                        <select id="client" required>
+                            <option value="">Seleccionar cliente...</option>
+                            <option value="ROSSI">ROSSI</option>
+                            <option value="NIP">NIP</option>
+                            <option value="BROUWER">BROUWER</option>
+                            <option value="FONTANELLA">FONTANELLA</option>
+                            <option value="LABORATORIOS ARRAYANES">LABORATORIOS ARRAYANES</option>
+                            <option value="LAM">LAM</option>
+                            <option value="FRIOPACK">FRIOPACK</option>
+                            <option value="PYP">PYP</option>
+                            <option value="HIT">HIT</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date">Fecha *</label>
+                        <input type="date" id="date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hours">Horas *</label>
+                        <input type="number" id="hours" step="0.5" min="0.5" max="24" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="type">Tipo *</label>
+                        <select id="type" required>
+                            <option value="Remoto">🏠 Remoto</option>
+                            <option value="Presencial">🏢 Presencial</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="requester">Quién lo solicitó <span class="optional">(opcional)</span></label>
+                        <input type="text" id="requester" placeholder="Ej: Juan Pérez">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Descripción <span class="optional">(opcional)</span></label>
+                        <textarea id="description" placeholder="Detalles..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn" id="submitBtn">💾 Guardar</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>📈 Resumen</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="totalHours">0.0</h3>
+                        <p>Horas</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="totalClients">0</h3>
+                        <p>Clientes</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="totalRecords">0</h3>
+                        <p>Registros</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <h2>📋 Registros</h2>
+            
+            <div class="filters">
+                <select id="filterYear">
+                    <option value="">Todos</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2025">2025</option>
+                </select>
+                
+                <select id="filterMonth">
+                    <option value="">Todos</option>
+                    <option value="01" selected>Enero</option>
+                    <option value="02">Febrero</option>
+                    <option value="03">Marzo</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Mayo</option>
+                    <option value="06">Junio</option>
+                    <option value="07">Julio</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+                
+                <select id="filterClient">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+
+            <div id="recordsList" class="records-list"></div>
+            <button class="export-btn" onclick="exportToExcel()">📥 Exportar</button>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3Q29GfibXpKj9SIv0ZKnD0gHsywGLDeCEB4iQ8o8nUIgM8n-sQEF53s-9G6yUFAPj/exec';
+        let timeRecords = [];
+
+        document.getElementById('date').valueAsDate = new Date();
+
+        async function loadRecords() {
+            try {
+                updateSyncStatus('syncing', '🔄 Cargando...');
+                console.log('Fetching from:', SCRIPT_URL);
+                
+                const response = await fetch(SCRIPT_URL);
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Data received:', data);
+                
+                timeRecords = Array.isArray(data) ? data : [];
+                
+                renderRecords();
+                updateStats();
+                populateClientFilter();
+                updateSyncStatus('connected', `✅ Conectado (${timeRecords.length} registros)`);
+            } catch (error) {
+                console.error('Error loading:', error);
+                updateSyncStatus('error', '❌ Error: ' + error.message);
+                timeRecords = [];
+            }
+        }
+
+        function updateSyncStatus(status, text) {
+            const el = document.getElementById('syncStatus');
+            el.className = `sync-status ${status}`;
+            el.textContent = text;
+        }
+
+        document.getElementById('timeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Guardando...';
+
+            const record = {
+                id: Date.now(),
+                date: document.getElementById('date').value,
+                client: document.getElementById('client').value,
+                hours: parseFloat(document.getElementById('hours').value),
+                type: document.getElementById('type').value,
+                requester: document.getElementById('requester').value.trim(),
+                description: document.getElementById('description').value.trim()
+            };
+
+            try {
+                console.log('Sending:', record);
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(record)
+                });
+
+                console.log('POST response:', response.status);
+                const result = await response.json();
+                console.log('Result:', result);
+                
+                if (result.success) {
+                    this.reset();
+                    document.getElementById('date').valueAsDate = new Date();
+                    await loadRecords();
+                    alert('✅ Guardado!');
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Desconocido'));
+                }
+            } catch (error) {
+                console.error('Error saving:', error);
+                alert('❌ Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '💾 Guardar';
+            }
+        });
+
+        function renderRecords() {
+            const container = document.getElementById('recordsList');
+            const filterYear = document.getElementById('filterYear').value;
+            const filterMonth = document.getElementById('filterMonth').value;
+            const filterClient = document.getElementById('filterClient').value;
+
+            let filtered = timeRecords;
+
+            if (filterYear) {
+                filtered = filtered.filter(r => r.date && r.date.toString().substring(0, 4) === filterYear);
+            }
+
+            if (filterMonth) {
+                filtered = filtered.filter(r => r.date && r.date.toString().substring(5, 7) === filterMonth);
+            }
+
+            if (filterClient) {
+                filtered = filtered.filter(r => r.client === filterClient);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No hay registros</p></div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(r => `
+                <div class="record-item">
+                    <div class="record-item-header">
+                        <span class="record-client">${r.client}</span>
+                        <span class="record-hours">${r.hours}h</span>
+                    </div>
+                    <div class="record-details">
+                        📅 ${r.date} | ${r.type === 'Remoto' ? '🏠' : '🏢'} ${r.type}
+                        ${r.requester ? '<br>👤 ' + r.requester : ''}
+                        ${r.description ? '<br>📝 ' + r.description : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const filterYear = document.getElementById('filterYear').value;
+            const filterMonth = document.getElementById('filterMonth').value;
+            let filtered = timeRecords;
+
+            if (filterYear) {
+                filtered = filtered.filter(r => r.date && r.date.toString().substring(0, 4) === filterYear);
+            }
+
+            if (filterMonth) {
+                filtered = filtered.filter(r => r.date && r.date.toString().substring(5, 7) === filterMonth);
+            }
+
+            const totalHours = filtered.reduce((sum, r) => sum + (parseFloat(r.hours) || 0), 0);
+            const uniqueClients = new Set(filtered.map(r => r.client)).size;
+
+            document.getElementById('totalHours').textContent = totalHours.toFixed(1);
+            document.getElementById('totalClients').textContent = uniqueClients;
+            document.getElementById('totalRecords').textContent = filtered.length;
+        }
+
+        function populateClientFilter() {
+            const clients = [...new Set(timeRecords.map(r => r.client))].sort();
+            const select = document.getElementById('filterClient');
+            select.innerHTML = '<option value="">Todos</option>' + 
+                clients.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function exportToExcel() {
+            if (timeRecords.length === 0) {
+                alert('No hay registros');
+                return;
+            }
+
+            let csv = 'Fecha,Cliente,Horas,Tipo,Solicitante,Descripción\n';
+            timeRecords.forEach(r => {
+                csv += `${r.date},${r.client},${r.hours},${r.type},"${r.requester || ''}","${r.description || '"}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'control_proyectos.csv';
+            link.click();
+        }
+
+        document.getElementById('filterYear').addEventListener('change', () => {
+            renderRecords();
+            updateStats();
+        });
+        
+        document.getElementById('filterMonth').addEventListener('change', () => {
+            renderRecords();
+            updateStats();
+        });
+
+        document.getElementById('filterClient').addEventListener('change', renderRecords);
+
+        loadRecords();
+    </script>
+</body>
+</html>

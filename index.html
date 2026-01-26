@@ -52,12 +52,7 @@
             padding-bottom: 10px;
         }
         .form-group { margin-bottom: 20px; }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 600;
-        }
+        label { display: block; margin-bottom: 8px; color: #555; font-weight: 600; }
         input, select, textarea {
             width: 100%;
             padding: 12px;
@@ -75,7 +70,9 @@
             font-weight: 600;
             cursor: pointer;
             width: 100%;
+            transition: 0.3s;
         }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -89,6 +86,7 @@
             border-radius: 12px;
             text-align: center;
         }
+        .stat-card h3 { font-size: 1.8em; }
         .filters {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -107,7 +105,10 @@
             display: flex;
             justify-content: space-between;
             font-weight: bold;
+            color: #333;
         }
+        .record-hours { background: #667eea; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.85em; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
         @media (max-width: 768px) {
             .main-content, .stats-grid, .filters { grid-template-columns: 1fr; }
         }
@@ -117,12 +118,12 @@
     <div class="container">
         <div class="header">
             <h1>📊 Control de Proyectos</h1>
-            <div id="syncStatus" class="sync-status syncing">🔄 Conectando...</div>
+            <div id="syncStatus" class="sync-status syncing">🔄 Conectando con Google Sheets...</div>
         </div>
 
         <div class="main-content">
             <div class="card">
-                <h2>➕ Registrar</h2>
+                <h2>➕ Registrar Horas</h2>
                 <form id="timeForm">
                     <div class="form-group">
                         <label>Fecha</label>
@@ -131,7 +132,7 @@
                     <div class="form-group">
                         <label>Cliente</label>
                         <select id="client" required>
-                            <option value="">Seleccionar...</option>
+                            <option value="">Seleccionar cliente...</option>
                             <option value="ROSSI">ROSSI</option>
                             <option value="NIP">NIP</option>
                             <option value="BROUWER">BROUWER</option>
@@ -140,7 +141,7 @@
                     </div>
                     <div class="form-group">
                         <label>Horas</label>
-                        <input type="number" id="hours" step="0.5" required>
+                        <input type="number" id="hours" step="0.1" required>
                     </div>
                     <div class="form-group">
                         <label>Tipo</label>
@@ -149,91 +150,149 @@
                             <option value="Presencial">🏢 Presencial</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn" id="submitBtn">💾 Guardar</button>
+                    <button type="submit" class="btn" id="submitBtn">💾 Guardar Registro</button>
                 </form>
             </div>
 
             <div class="card">
-                <h2>📈 Resumen</h2>
+                <h2>📈 Resumen y Filtros</h2>
                 <div class="stats-grid">
                     <div class="stat-card"><h3 id="totalHours">0.0</h3><p>Horas</p></div>
                     <div class="stat-card"><h3 id="totalClients">0</h3><p>Clientes</p></div>
                     <div class="stat-card"><h3 id="totalRecords">0</h3><p>Registros</p></div>
                 </div>
+
                 <div class="filters">
-                    <select id="fYear"><option value="2026">2026</option><option value="2025">2025</option></select>
-                    <select id="fClient"><option value="">Todos</option></select>
+                    <select id="filterYear">
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                    </select>
+                    <select id="filterMonth">
+                        <option value="">Todos los meses</option>
+                        <option value="01">Enero</option>
+                        <option value="02">Febrero</option>
+                        <option value="03">Marzo</option>
+                    </select>
+                    <select id="filterClient">
+                        <option value="">Todos los clientes</option>
+                    </select>
                 </div>
+
                 <div id="recordsList" class="records-list"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // PEGA TU URL AQUÍ
+        // 1. REEMPLAZA ESTA URL CON TU LINK DE GOOGLE /EXEC
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNF5pO9cw_Qpn3JeqUz1gH5xjDMuTJygJMekP2QI_cYU10BA65_9xnXxdzEjsuU-23/exec'; 
         let timeRecords = [];
 
-        async function load() {
+        async function loadRecords() {
             try {
-                const res = await fetch(SCRIPT_URL);
-                timeRecords = await res.json();
-                document.getElementById('syncStatus').className = 'sync-status connected';
-                document.getElementById('syncStatus').innerText = '✅ Conectado';
-                render();
-                updateFilters();
-            } catch (e) {
-                document.getElementById('syncStatus').className = 'sync-status error';
-                document.getElementById('syncStatus').innerText = '❌ Error de Conexión';
+                const response = await fetch(SCRIPT_URL);
+                timeRecords = await response.json();
+                
+                const statusEl = document.getElementById('syncStatus');
+                statusEl.className = 'sync-status connected';
+                statusEl.innerText = '✅ Sincronizado con Google Sheets';
+                
+                populateClientFilter();
+                renderRecords();
+            } catch (error) {
+                const statusEl = document.getElementById('syncStatus');
+                statusEl.className = 'sync-status error';
+                statusEl.innerText = '❌ Error de conexión';
             }
         }
 
-        function render() {
-            const year = document.getElementById('fYear').value;
-            const client = document.getElementById('fClient').value;
+        function renderRecords() {
             const container = document.getElementById('recordsList');
-            
-            const filtered = timeRecords.filter(r => {
-                const matchYear = String(r.fecha).includes(year);
-                const matchClient = !client || r.cliente === client;
-                return matchYear && matchClient;
+            const fYear = document.getElementById('filterYear').value;
+            const fMonth = document.getElementById('filterMonth').value;
+            const fClient = document.getElementById('filterClient').value;
+
+            let filtered = timeRecords.filter(r => {
+                const rDate = String(r.fecha); 
+                const matchYear = !fYear || rDate.includes(fYear);
+                const matchMonth = !fMonth || rDate.includes("-" + fMonth + "-") || rDate.includes("/" + fMonth + "/");
+                const matchClient = !fClient || r.cliente === fClient;
+                return matchYear && matchMonth && matchClient;
             });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No hay registros para este filtro</p></div>';
+                updateStats(0, 0, 0);
+                return;
+            }
 
             container.innerHTML = filtered.map(r => `
                 <div class="record-item">
                     <div class="record-item-header">
-                        <span>${r.cliente}</span>
-                        <span>${r.horas}h</span>
+                        <span class="record-client">${r.cliente || 'Sin nombre'}</span>
+                        <span class="record-hours">${r.horas}h</span>
                     </div>
                     <div style="font-size: 0.85em; color: #666; margin-top: 5px;">
-                        📅 ${String(r.fecha).split('T')[0]} | ${r.tipo}
+                        📅 ${String(r.fecha).split(' ')[0]} | ${r.tipo || '---'}
                     </div>
                 </div>
-            `).join('') || 'No hay datos';
+            `).join('');
 
-            updateStats(filtered);
+            // Calcular Stats
+            const totalH = filtered.reduce((s, r) => s + (parseFloat(r.horas) || 0), 0);
+            const totalC = new Set(filtered.map(r => r.cliente)).size;
+            updateStats(totalH, totalC, filtered.length);
         }
 
-        function updateStats(data) {
-            const totalH = data.reduce((s, r) => s + (parseFloat(r.horas) || 0), 0);
-            const totalC = new Set(data.map(r => r.cliente)).size;
-            document.getElementById('totalHours').innerText = totalH.toFixed(1);
-            document.getElementById('totalClients').innerText = totalC;
-            document.getElementById('totalRecords').innerText = data.length;
+        function updateStats(h, c, r) {
+            document.getElementById('totalHours').innerText = h.toFixed(1);
+            document.getElementById('totalClients').innerText = c;
+            document.getElementById('totalRecords').innerText = r;
         }
 
-        function updateFilters() {
+        function populateClientFilter() {
             const clients = [...new Set(timeRecords.map(r => r.cliente))].filter(Boolean);
-            const select = document.getElementById('fClient');
-            select.innerHTML = '<option value="">Todos</option>' + clients.map(c => `<option value="${c}">${c}</option>`).join('');
+            const select = document.getElementById('filterClient');
+            const current = select.value;
+            select.innerHTML = '<option value="">Todos los clientes</option>' + 
+                clients.map(c => `<option value="${c}">${c}</option>`).join('');
+            select.value = current;
         }
 
-        document.getElementById('timeForm').onsubmit = async (e) => {
+        document.getElementById('timeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.innerText = '⏳ Guardando...';
 
-            const payload = {
+            const data = {
                 date: document.getElementById('date').value,
-                client: document.getElementById('client').
+                client: document.getElementById('client').value,
+                hours: document.getElementById('hours').value,
+                type: document.getElementById('type').value
+            };
+
+            try {
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+                this.reset();
+                document.getElementById('date').valueAsDate = new Date();
+                await loadRecords();
+            } catch (e) {
+                alert("Error al guardar");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '💾 Guardar Registro';
+            }
+        });
+
+        // Eventos de filtros
+        document.getElementById('filterYear').onchange = renderRecords;
+        document.getElementById('filterMonth').onchange = renderRecords;
+        document.getElementById('filterClient').onchange = renderRecords;
+
+        // Inicio
+        document.getElementById('date').valueAsDate = new Date();
+        loadRecords();
+    </script>
+</body>
+</html>

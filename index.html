@@ -275,155 +275,150 @@
     </div>
 
     <script>
-        // URL DE TU GOOGLE SCRIPT ACTUALIZADA
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJPLpeRYODA9gRq0Zwcl8pLEkTdnUUKuhmTgz-chMaieGF_pK6gAs3_VwORKyFzx68/exec';
-        let timeRecords = [];
+    // PEGA AQUÍ TU NUEVA URL DE GOOGLE
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJPLpeRYODA9gRq0Zwcl8pLEkTdnUUKuhmTgz-chMaieGF_pK6gAs3_VwORKyFzx68/exec'; 
+    let timeRecords = [];
 
-        document.getElementById('date').valueAsDate = new Date();
+    document.getElementById('date').valueAsDate = new Date();
 
-        async function loadRecords() {
-            try {
-                updateSyncStatus('syncing', '🔄 Cargando datos...');
-                const response = await fetch(SCRIPT_URL);
-                const data = await response.json();
-                timeRecords = Array.isArray(data) ? data : [];
-                renderRecords();
-                updateStats();
-                populateClientFilter();
-                updateSyncStatus('connected', `✅ Conectado (${timeRecords.length})`);
-            } catch (error) {
-                console.error("Error cargando:", error);
-                updateSyncStatus('error', '❌ Error de conexión');
-            }
+    async function loadRecords() {
+        try {
+            updateSyncStatus('syncing', '🔄 Cargando datos...');
+            const response = await fetch(SCRIPT_URL);
+            const data = await response.json();
+            timeRecords = Array.isArray(data) ? data : [];
+            renderRecords();
+            updateStats();
+            populateClientFilter();
+            updateSyncStatus('connected', `✅ Conectado (${timeRecords.length})`);
+        } catch (error) {
+            updateSyncStatus('error', '❌ Error de conexión');
         }
-
-        function updateSyncStatus(status, text) {
-            const el = document.getElementById('syncStatus');
-            el.className = `sync-status ${status}`;
-            el.textContent = text;
-        }
-
-        document.getElementById('timeForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳ Guardando...';
-
-            const record = {
-                date: document.getElementById('date').value,
-                client: document.getElementById('client').value,
-                hours: parseFloat(document.getElementById('hours').value),
-                type: document.getElementById('type').value,
-                requester: document.getElementById('requester').value.trim(),
-                description: document.getElementById('description').value.trim()
-            };
-
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(record)
-                });
-                const result = await response.json();
-                if (result.success) {
-                    this.reset();
-                    document.getElementById('date').valueAsDate = new Date();
-                    await loadRecords();
-                    alert('✅ Registro guardado en Google Sheets');
-                }
-            } catch (error) {
-                alert('❌ Error al conectar con Google');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '💾 Guardar';
-            }
-        });
-
-        function renderRecords() {
-    const container = document.getElementById('recordsList');
-    const fYear = document.getElementById('filterYear').value;
-    const fMonth = document.getElementById('filterMonth').value;
-    const fClient = document.getElementById('filterClient').value;
-
-    let filtered = timeRecords.filter(r => {
-        // Buscamos la fecha en minúsculas y sin tildes
-        const rDate = (r.fecha || "").toString(); 
-        const matchYear = !fYear || rDate.includes(fYear);
-        const matchMonth = !fMonth || rDate.includes("-" + fMonth + "-") || rDate.includes("/" + fMonth + "/");
-        const matchClient = !fClient || r.cliente === fClient;
-        return matchYear && matchMonth && matchClient;
-    });
-
-    if (filtered.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>No hay registros</p></div>';
-        return;
     }
 
-    container.innerHTML = filtered.map(r => `
-        <div class="record-item">
-            <div class="record-item-header">
-                <span class="record-client">${r.cliente || 'Sin nombre'}</span>
-                <span class="record-hours">${r.horas || 0}h</span>
-            </div>
-            <div class="record-details">
-                📅 ${r.fecha ? r.fecha.toString().split('T')[0] : '---'} | ${r.tipo || '---'}
-                ${r.solicitante ? '<br>👤 ' + r.solicitante : ''}
-                ${r.descripcion ? '<br>📝 ' + r.descripcion : ''}
-            </div>
-        </div>
-    `).join('');
-}
+    function updateSyncStatus(status, text) {
+        const el = document.getElementById('syncStatus');
+        el.className = `sync-status ${status}`;
+        el.textContent = text;
+    }
 
-        function updateStats() {
-            const fYear = document.getElementById('filterYear').value;
-            const fMonth = document.getElementById('filterMonth').value;
-            
-            let filtered = timeRecords.filter(r => {
-                const rawDate = (r.fecha || r.date || "").toString();
-                const matchYear = !fYear || rawDate.includes(fYear);
-                const matchMonth = !fMonth || rawDate.includes("-" + fMonth + "-") || rawDate.includes("/" + fMonth + "/");
-                return matchYear && matchMonth;
+    document.getElementById('timeForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Guardando...';
+
+        const record = {
+            date: document.getElementById('date').value,
+            client: document.getElementById('client').value,
+            hours: parseFloat(document.getElementById('hours').value),
+            type: document.getElementById('type').value,
+            requester: document.getElementById('requester').value.trim(),
+            description: document.getElementById('description').value.trim()
+        };
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(record)
             });
-
-            const totalH = filtered.reduce((s, r) => s + (parseFloat(r.horas || r.hours) || 0), 0);
-            const totalC = new Set(filtered.map(r => r.cliente || r.client)).size;
-
-            document.getElementById('totalHours').textContent = totalH.toFixed(1);
-            document.getElementById('totalClients').textContent = totalC;
-            document.getElementById('totalRecords').textContent = filtered.length;
+            const result = await response.json();
+            if (result.success) {
+                this.reset();
+                document.getElementById('date').valueAsDate = new Date();
+                await loadRecords();
+                alert('✅ Guardado en Excel');
+            }
+        } catch (error) {
+            alert('❌ Error al guardar');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '💾 Guardar';
         }
+    });
 
-        function populateClientFilter() {
-            const clients = [...new Set(timeRecords.map(r => r.cliente || r.client))].filter(Boolean).sort();
-            const select = document.getElementById('filterClient');
-            const current = select.value;
-            select.innerHTML = '<option value="">Todos los clientes</option>' + 
-                clients.map(c => `<option value="${c}">${c}</option>`).join('');
-            select.value = current;
-        }
+    function renderRecords() {
+        const container = document.getElementById('recordsList');
+        const fYear = document.getElementById('filterYear').value;
+        const fMonth = document.getElementById('filterMonth').value;
+        const fClient = document.getElementById('filterClient').value;
 
-        function exportToCSV() {
-            if (timeRecords.length === 0) return alert('No hay datos');
-            let csv = 'Fecha,Cliente,Horas,Tipo,Solicitante,Descripcion\n';
-            timeRecords.forEach(r => {
-                const d = (r.descripción || r.description || '').replace(/,/g, ';');
-                const q = (r.solicitante || r.requester || '').replace(/,/g, ';');
-                csv += `${r.fecha || r.date},${r.cliente || r.client},${r.horas || r.hours},${r.tipo || r.type},${q},${d}\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `reporte_${new Date().toISOString().split('T')[0]}.csv`;
-            link.click();
-        }
-
-        document.querySelectorAll('.filters select').forEach(s => {
-            s.addEventListener('change', () => {
-                renderRecords();
-                updateStats();
-            });
+        let filtered = timeRecords.filter(r => {
+            const rawDate = (r.Fecha || "").toString(); 
+            const matchYear = !fYear || rawDate.includes(fYear);
+            const matchMonth = !fMonth || rawDate.includes("-" + fMonth + "-") || rawDate.includes("/" + fMonth + "/");
+            const matchClient = !fClient || r.Cliente === fClient;
+            return matchYear && matchMonth && matchClient;
         });
 
-        loadRecords();
-    </script>
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="empty-state"><p>No hay registros</p></div>';
+            return;
+        }
+
+        container.innerHTML = filtered.map(r => `
+            <div class="record-item">
+                <div class="record-item-header">
+                    <span class="record-client">${r.Cliente || 'Sin nombre'}</span>
+                    <span class="record-hours">${r.Horas || 0}h</span>
+                </div>
+                <div class="record-details">
+                    📅 ${r.Fecha ? r.Fecha.toString().split('T')[0] : '---'} | ${r.Tipo || '---'}
+                    ${r.Solicitante ? '<br>👤 ' + r.Solicitante : ''}
+                    ${r.Descripción ? '<br>📝 ' + r.Descripción : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateStats() {
+        const fYear = document.getElementById('filterYear').value;
+        const fMonth = document.getElementById('filterMonth').value;
+        let filtered = timeRecords.filter(r => {
+            const rawDate = (r.Fecha || "").toString();
+            const matchYear = !fYear || rawDate.includes(fYear);
+            const matchMonth = !fMonth || rawDate.includes("-" + fMonth + "-") || rawDate.includes("/" + fMonth + "/");
+            return matchYear && matchMonth;
+        });
+        const totalH = filtered.reduce((s, r) => s + (parseFloat(r.Horas) || 0), 0);
+        const totalC = new Set(filtered.map(r => r.Cliente)).size;
+        document.getElementById('totalHours').textContent = totalH.toFixed(1);
+        document.getElementById('totalClients').textContent = totalC;
+        document.getElementById('totalRecords').textContent = filtered.length;
+    }
+
+    function populateClientFilter() {
+        const clients = [...new Set(timeRecords.map(r => r.Cliente))].filter(Boolean).sort();
+        const select = document.getElementById('filterClient');
+        const current = select.value;
+        select.innerHTML = '<option value="">Todos los clientes</option>' + 
+            clients.map(c => `<option value="${c}">${c}</option>`).join('');
+        select.value = current;
+    }
+
+    function exportToCSV() {
+        if (timeRecords.length === 0) return alert('No hay datos');
+        let csv = 'Fecha,Cliente,Horas,Tipo,Solicitante,Descripcion\n';
+        timeRecords.forEach(r => {
+            const d = (r.Descripción || '').replace(/,/g, ';');
+            const q = (r.Solicitante || '').replace(/,/g, ';');
+            csv += `${r.Fecha},${r.Cliente},${r.Horas},${r.Tipo},${q},${d}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `reporte.csv`;
+        link.click();
+    }
+
+    document.querySelectorAll('.filters select').forEach(s => {
+        s.addEventListener('change', () => {
+            renderRecords();
+            updateStats();
+        });
+    });
+
+    loadRecords();
+</script>
 </body>
 </html>

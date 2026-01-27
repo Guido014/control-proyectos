@@ -60,6 +60,14 @@
             border-radius: 8px;
             font-size: 1em;
         }
+        /* Estilo para el contador de caracteres */
+        .char-count {
+            display: block;
+            text-align: right;
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 5px;
+        }
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -150,6 +158,12 @@
                             <option value="Presencial">🏢 Presencial</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label>Descripción para Facturación</label>
+                        <input type="text" id="billingDesc" maxlength="50" placeholder="Ej: Ajustes finales..." oninput="updateCounter()">
+                        <span class="char-count" id="charCount">0 / 50</span>
+                    </div>
+
                     <button type="submit" class="btn" id="submitBtn">💾 Guardar Registro</button>
                 </form>
             </div>
@@ -184,9 +198,16 @@
     </div>
 
     <script>
-        // 1. REEMPLAZA ESTA URL CON TU LINK DE GOOGLE /EXEC
+        // MANTÉN TU URL ACTUAL AQUÍ
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNF5pO9cw_Qpn3JeqUz1gH5xjDMuTJygJMekP2QI_cYU10BA65_9xnXxdzEjsuU-23/exec'; 
         let timeRecords = [];
+
+        // Función para contar caracteres
+        function updateCounter() {
+            const input = document.getElementById('billingDesc');
+            const counter = document.getElementById('charCount');
+            counter.innerText = `${input.value.length} / 50`;
+        }
 
         async function loadRecords() {
             try {
@@ -234,6 +255,7 @@
                     </div>
                     <div style="font-size: 0.85em; color: #666; margin-top: 5px;">
                         📅 ${String(r.fecha).split(' ')[0]} | ${r.tipo || '---'}
+                        ${r.descripcion ? '<br>📝 ' + r.descripcion : ''}
                     </div>
                 </div>
             `).join('');
@@ -269,12 +291,14 @@
                 date: document.getElementById('date').value,
                 client: document.getElementById('client').value,
                 hours: document.getElementById('hours').value,
-                type: document.getElementById('type').value
+                type: document.getElementById('type').value,
+                description: document.getElementById('billingDesc').value // Enviamos la descripción nueva
             };
 
             try {
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
                 this.reset();
+                document.getElementById('charCount').innerText = "0 / 50"; // Reset contador
                 document.getElementById('date').valueAsDate = new Date();
                 await loadRecords();
             } catch (e) {

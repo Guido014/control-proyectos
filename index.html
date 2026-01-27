@@ -246,18 +246,18 @@
     const fClient = document.getElementById('filterClient').value;
 
     let filtered = timeRecords.filter(r => {
-        // r.fecha ahora viene como "2026-01-27"
-        const rDate = String(r.fecha); 
+        // Convertimos a string y quitamos espacios por si acaso
+        const rDate = String(r.fecha).trim(); 
         
-        // 1. Filtro de Año: busca "2026"
+        // 1. Filtro de Año (ej: "2026")
         const matchYear = !fYear || rDate.includes(fYear);
         
-        // 2. Filtro de Mes: busca "-01-", "-02-", etc.
-        // Esto es infalible con el formato yyyy-mm-dd
+        // 2. Filtro de Mes (ej: "-01-")
+        // Buscamos el mes rodeado de guiones para que sea exacto
         const matchMonth = !fMonth || rDate.includes("-" + fMonth + "-");
         
-        // 3. Filtro de Cliente: comparación exacta ignorando espacios extras
-        const matchClient = !fClient || r.cliente.trim() === fClient.trim();
+        // 3. Filtro de Cliente (Ignora mayúsculas/minúsculas y espacios)
+        const matchClient = !fClient || r.cliente.trim().toUpperCase() === fClient.trim().toUpperCase();
         
         return matchYear && matchMonth && matchClient;
     });
@@ -268,32 +268,26 @@
         return;
     }
 
-    // Dibujar la lista
+    // Dibujar los registros en el HTML
     container.innerHTML = filtered.map(r => `
         <div class="record-item">
             <div class="record-item-header">
                 <span class="record-client">${r.cliente || 'Sin nombre'}</span>
                 <span class="record-hours">${r.horas}h</span>
             </div>
-            <div style="font-size: 0.85em; color: #666; margin-top: 5px;">
-                📅 ${rDate} | ${r.tipo || '---'}
-                ${r.solicitante ? '<br>👤 ' + r.solicitante : ''}
-                ${r.descripcion ? '<br>📝 ' + r.descripcion : ''}
+            <div style="font-size: 0.85em; color: #666; margin-top: 5px; line-height: 1.4;">
+                📅 ${String(r.fecha).split(' ')[0]} | ${r.tipo || '---'}
+                ${r.solicitante ? '<br><span style="color: #444;">👤 ' + r.solicitante + '</span>' : ''}
+                ${r.descripcion ? '<br><span style="color: #774ba2; font-style: italic;">📝 ' + r.descripcion + '</span>' : ''}
             </div>
         </div>
     `).join('');
 
-    // Actualizar los paneles de arriba
-    const totalH = filtered.reduce((s, r) => s + (parseFloat(r.horas) || 0), 0);
-    const totalC = new Set(filtered.map(r => r.cliente)).size;
+    // Actualizar los números de las tarjetas de arriba (Stats)
+    const totalH = filtered.reduce((sum, rec) => sum + (parseFloat(rec.horas) || 0), 0);
+    const totalC = new Set(filtered.map(rec => rec.cliente)).size;
     updateStats(totalH, totalC, filtered.length);
 }
-        function updateStats(h, c, r) {
-            document.getElementById('totalHours').innerText = h.toFixed(1);
-            document.getElementById('totalClients').innerText = c;
-            document.getElementById('totalRecords').innerText = r;
-        }
-
         function populateClientFilter() {
             const clients = [...new Set(timeRecords.map(r => r.cliente))].filter(Boolean);
             const select = document.getElementById('filterClient');

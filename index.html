@@ -246,17 +246,17 @@
     const fClient = document.getElementById('filterClient').value;
 
     let filtered = timeRecords.filter(r => {
-        const rDate = String(r.fecha); // Ejemplo: "2026-01-27"
+        // r.fecha ahora viene como "2026-01-27"
+        const rDate = String(r.fecha); 
         
-        // Filtro de Año
+        // 1. Filtro de Año: busca "2026"
         const matchYear = !fYear || rDate.includes(fYear);
         
-        // Filtro de Mes mejorado: 
-        // Buscamos "-01-" para enero, "-02-" para febrero, etc.
-        // Esto evita que "01" coincida con el día 01 de cualquier mes.
+        // 2. Filtro de Mes: busca "-01-", "-02-", etc.
+        // Esto es infalible con el formato yyyy-mm-dd
         const matchMonth = !fMonth || rDate.includes("-" + fMonth + "-");
         
-        // Filtro de Cliente (Limpiamos espacios para asegurar coincidencia)
+        // 3. Filtro de Cliente: comparación exacta ignorando espacios extras
         const matchClient = !fClient || r.cliente.trim() === fClient.trim();
         
         return matchYear && matchMonth && matchClient;
@@ -268,7 +268,7 @@
         return;
     }
 
-    // Dibujar los registros
+    // Dibujar la lista
     container.innerHTML = filtered.map(r => `
         <div class="record-item">
             <div class="record-item-header">
@@ -276,19 +276,18 @@
                 <span class="record-hours">${r.horas}h</span>
             </div>
             <div style="font-size: 0.85em; color: #666; margin-top: 5px;">
-                📅 ${String(r.fecha).split(' ')[0]} | ${r.tipo || '---'}
+                📅 ${rDate} | ${r.tipo || '---'}
                 ${r.solicitante ? '<br>👤 ' + r.solicitante : ''}
                 ${r.descripcion ? '<br>📝 ' + r.descripcion : ''}
             </div>
         </div>
     `).join('');
 
-    // Actualizar Stats con los datos filtrados
+    // Actualizar los paneles de arriba
     const totalH = filtered.reduce((s, r) => s + (parseFloat(r.horas) || 0), 0);
     const totalC = new Set(filtered.map(r => r.cliente)).size;
     updateStats(totalH, totalC, filtered.length);
 }
-
         function updateStats(h, c, r) {
             document.getElementById('totalHours').innerText = h.toFixed(1);
             document.getElementById('totalClients').innerText = c;

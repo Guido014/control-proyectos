@@ -60,7 +60,7 @@
             border-radius: 8px;
             font-size: 1em;
         }
-        /* Estilo para el contador de caracteres */
+        /* Estilo para los contadores */
         .char-count {
             display: block;
             text-align: right;
@@ -117,6 +117,7 @@
         }
         .record-hours { background: #667eea; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.85em; }
         .empty-state { text-align: center; padding: 40px; color: #999; }
+        
         @media (max-width: 768px) {
             .main-content, .stats-grid, .filters { grid-template-columns: 1fr; }
         }
@@ -145,6 +146,9 @@
                             <option value="NIP">NIP</option>
                             <option value="BROUWER">BROUWER</option>
                             <option value="FONTANELLA">FONTANELLA</option>
+			    <option value="PYP">PYP</option>
+			    <option value="LABORATORIOS ARRAYANES">LABORATORIOS ARRAYANES</option>
+			    <option value="FRIOPACK">FRIOPACK</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -158,10 +162,17 @@
                             <option value="Presencial">🏢 Presencial</option>
                         </select>
                     </div>
+                    
+                    <div class="form-group">
+                        <label>Solicitante</label>
+                        <input type="text" id="requester" maxlength="50" placeholder="Ej. Santiago Avalle" oninput="updateReqCount()">
+                        <span class="char-count" id="reqCountDisplay">0 / 50</span>
+                    </div>
+
                     <div class="form-group">
                         <label>Descripción para Facturación</label>
-                        <input type="text" id="billingDesc" maxlength="50" placeholder="Ej: Ajustes finales..." oninput="updateCounter()">
-                        <span class="char-count" id="charCount">0 / 50</span>
+                        <input type="text" id="billingDesc" maxlength="50" placeholder="Ej. Ajustes finales..." oninput="updateDescCount()">
+                        <span class="char-count" id="descCountDisplay">0 / 50</span>
                     </div>
 
                     <button type="submit" class="btn" id="submitBtn">💾 Guardar Registro</button>
@@ -198,15 +209,18 @@
     </div>
 
     <script>
-        // MANTÉN TU URL ACTUAL AQUÍ
+        // MANTÉN TU URL DE SIEMPRE AQUÍ
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNF5pO9cw_Qpn3JeqUz1gH5xjDMuTJygJMekP2QI_cYU10BA65_9xnXxdzEjsuU-23/exec'; 
         let timeRecords = [];
 
-        // Función para contar caracteres
-        function updateCounter() {
-            const input = document.getElementById('billingDesc');
-            const counter = document.getElementById('charCount');
-            counter.innerText = `${input.value.length} / 50`;
+        // Contadores de caracteres
+        function updateReqCount() {
+            const val = document.getElementById('requester').value.length;
+            document.getElementById('reqCountDisplay').innerText = `${val} / 50`;
+        }
+        function updateDescCount() {
+            const val = document.getElementById('billingDesc').value.length;
+            document.getElementById('descCountDisplay').innerText = `${val} / 50`;
         }
 
         async function loadRecords() {
@@ -214,16 +228,14 @@
                 const response = await fetch(SCRIPT_URL);
                 timeRecords = await response.json();
                 
-                const statusEl = document.getElementById('syncStatus');
-                statusEl.className = 'sync-status connected';
-                statusEl.innerText = '✅ Sincronizado con Google Sheets';
+                document.getElementById('syncStatus').className = 'sync-status connected';
+                document.getElementById('syncStatus').innerText = '✅ Sincronizado con Google Sheets';
                 
                 populateClientFilter();
                 renderRecords();
             } catch (error) {
-                const statusEl = document.getElementById('syncStatus');
-                statusEl.className = 'sync-status error';
-                statusEl.innerText = '❌ Error de conexión';
+                document.getElementById('syncStatus').className = 'sync-status error';
+                document.getElementById('syncStatus').innerText = '❌ Error de conexión';
             }
         }
 
@@ -255,12 +267,12 @@
                     </div>
                     <div style="font-size: 0.85em; color: #666; margin-top: 5px;">
                         📅 ${String(r.fecha).split(' ')[0]} | ${r.tipo || '---'}
+                        ${r.solicitante ? '<br>👤 ' + r.solicitante : ''}
                         ${r.descripcion ? '<br>📝 ' + r.descripcion : ''}
                     </div>
                 </div>
             `).join('');
 
-            // Calcular Stats
             const totalH = filtered.reduce((s, r) => s + (parseFloat(r.horas) || 0), 0);
             const totalC = new Set(filtered.map(r => r.cliente)).size;
             updateStats(totalH, totalC, filtered.length);
@@ -292,13 +304,17 @@
                 client: document.getElementById('client').value,
                 hours: document.getElementById('hours').value,
                 type: document.getElementById('type').value,
-                description: document.getElementById('billingDesc').value // Enviamos la descripción nueva
+                requester: document.getElementById('requester').value, // DATO NUEVO
+                description: document.getElementById('billingDesc').value // DATO NUEVO
             };
 
             try {
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
                 this.reset();
-                document.getElementById('charCount').innerText = "0 / 50"; // Reset contador
+                // Resetear contadores visuales
+                document.getElementById('reqCountDisplay').innerText = "0 / 50";
+                document.getElementById('descCountDisplay').innerText = "0 / 50";
+                
                 document.getElementById('date').valueAsDate = new Date();
                 await loadRecords();
             } catch (e) {
@@ -309,12 +325,10 @@
             }
         });
 
-        // Eventos de filtros
         document.getElementById('filterYear').onchange = renderRecords;
         document.getElementById('filterMonth').onchange = renderRecords;
         document.getElementById('filterClient').onchange = renderRecords;
 
-        // Inicio
         document.getElementById('date').valueAsDate = new Date();
         loadRecords();
     </script>

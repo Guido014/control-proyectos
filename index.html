@@ -125,12 +125,18 @@
 </head>
 <body>
     <div class="container">
-        <div class="header" style="position: relative;">
-    <h1 style="margin: 0; text-align: center;">📊 Control de Proyectos</h1>
+        <div class="header" style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 120px; position: relative; padding: 20px; transition: all 0.5s ease;">
     
-    <div id="statusContainer" style="height: 40px; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-        <div id="syncStatus" class="sync-status connected" style="transition: opacity 0.5s;">✅ Sincronizado</div>
+    <h1 style="margin: 0; z-index: 2;">📊 Control de Proyectos</h1>
+    
+    <button onclick="loadRecords()" style="position: absolute; right: 20px; top: 25px; background: none; border: none; cursor: pointer; font-size: 1.2em; opacity: 0.5;" title="Actualizar datos">🔄</button>
+
+    <div id="statusWrapper" style="overflow: hidden; transition: all 0.5s ease; height: 40px; display: flex; align-items: center; justify-content: center;">
+        <div id="syncStatus" class="sync-status connected" style="margin-top: 10px;">
+            ✅ Sincronizado
         </div>
+    </div>
+</div>
 
         <div class="main-content">
             <div class="card">
@@ -227,9 +233,11 @@
 
         async function loadRecords() {
     const statusLabel = document.getElementById('syncStatus');
+    const statusWrapper = document.getElementById('statusWrapper');
     
-    // Mostramos el cartel al empezar
-    statusLabel.style.opacity = '1';
+    // 1. Abrimos el espacio y mostramos el cartel
+    statusWrapper.style.height = '40px';
+    statusWrapper.style.opacity = '1';
     statusLabel.className = 'sync-status syncing';
     statusLabel.innerText = '🔄 Sincronizando...';
 
@@ -246,21 +254,24 @@
             populateClientFilter();
             renderRecords();
             
-            // --- EFECTO DESAPARECER ---
-            // Después de 3 segundos, el cartel se vuelve invisible
+            // 2. COLAPSO: Después de 2.5 segundos, el cartel desaparece
+            // y el título baja al centro del div
             setTimeout(() => {
-                statusLabel.style.opacity = '0';
-            }, 3000);
+                statusWrapper.style.height = '0px';
+                statusWrapper.style.opacity = '0';
+            }, 2500);
         }
     } catch (error) {
-        console.warn("Error silencioso de red:", error);
+        console.warn("Fallo de red:", error);
         if (timeRecords.length === 0) {
+            statusWrapper.style.height = '40px';
+            statusWrapper.style.opacity = '1';
             statusLabel.className = 'sync-status error';
             statusLabel.innerText = '❌ Error de conexión';
-            statusLabel.style.opacity = '1';
         } else {
-            // Si ya hay datos, simplemente ocultamos el aviso de carga
-            statusLabel.style.opacity = '0';
+            // Si ya hay datos, colapsamos el aviso para no molestar
+            statusWrapper.style.height = '0px';
+            statusWrapper.style.opacity = '0';
         }
     }
 }        function renderRecords() {

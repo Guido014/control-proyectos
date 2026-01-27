@@ -127,8 +127,10 @@
     <div class="container">
         <div class="header">
             <h1>📊 Control de Proyectos</h1>
-            <div id="syncStatus" class="sync-status syncing">🔄 Conectando con Google Sheets...</div>
-        </div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+    <div id="syncStatus" class="sync-status syncing">🔄 Conectando...</div>
+    <button onclick="loadRecords()" style="background: none; border: none; cursor: pointer; font-size: 1.2em;" title="Recargar datos">🔄</button>
+</div>
 
         <div class="main-content">
             <div class="card">
@@ -225,39 +227,40 @@
 
         async function loadRecords() {
     const statusLabel = document.getElementById('syncStatus');
+    
     try {
-        // Mostramos que está cargando
+        // 1. Iniciamos en estado de carga
         statusLabel.className = 'sync-status syncing';
         statusLabel.innerText = '🔄 Sincronizando datos...';
 
         const response = await fetch(SCRIPT_URL);
-        
-        if (!response.ok) throw new Error('Fallo en la respuesta');
-        
-        timeRecords = await response.json();
-        
-        // Si llegamos aquí, todo salió bien
-        statusLabel.className = 'sync-status connected';
-        statusLabel.innerText = '✅ Sincronizado con Google Sheets';
-        statusLabel.style.backgroundColor = '#d4edda'; // Color verde suave
-        statusLabel.style.color = '#155724';
-        
-        populateClientFilter();
-        renderRecords();
-    } catch (error) {
-        console.error("Error cargando datos:", error);
-        // Solo mostramos error si realmente no hay datos que mostrar
-        if (timeRecords.length === 0) {
-            statusLabel.className = 'sync-status error';
-            statusLabel.innerText = '❌ Error de conexión (Reintente)';
-        } else {
-            // Si ya teníamos datos, mantenemos el estado conectado
+        const data = await response.json();
+
+        // 2. Si recibimos un array (aunque esté vacío), la conexión fue EXITOSA
+        if (Array.isArray(data)) {
+            timeRecords = data;
             statusLabel.className = 'sync-status connected';
-            statusLabel.innerText = '✅ Sincronizado';
+            statusLabel.innerText = '✅ Sincronizado con Google Sheets';
+            
+            populateClientFilter();
+            renderRecords();
+        } else {
+            throw new Error("Formato de datos incorrecto");
+        }
+
+    } catch (error) {
+        console.warn("Aviso de conexión:", error);
+        
+        // 3. LA CLAVE: Si a pesar del "error" tenemos datos, lo damos como bueno
+        if (timeRecords && timeRecords.length > 0) {
+            statusLabel.className = 'sync-status connected';
+            statusLabel.innerText = '✅ Sincronizado (Modo Offline/Caché)';
+        } else {
+            statusLabel.className = 'sync-status error';
+            statusLabel.innerText = '❌ Error de conexión';
         }
     }
 }
-
         function renderRecords() {
     const container = document.getElementById('recordsList');
     const fYear = document.getElementById('filterYear').value;

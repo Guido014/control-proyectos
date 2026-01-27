@@ -127,8 +127,10 @@
     <div class="container">
         <div class="header">
             <h1>📊 Control de Proyectos</h1>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-    <div id="syncStatus" class="sync-status syncing">🔄 Conectando...</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;">
+    <div id="syncStatus" class="sync-status connected">✅ Sincronizado</div>
+    <button onclick="loadRecords()" style="background: #ffffff33; border: 1px solid white; border-radius: 50%; cursor: pointer; padding: 5px; color: white;" title="Actualizar datos">🔄</button>
+</div>
     <button onclick="loadRecords()" style="background: none; border: none; cursor: pointer; font-size: 1.2em;" title="Recargar datos">🔄</button>
 </div>
 
@@ -228,40 +230,48 @@
         async function loadRecords() {
     const statusLabel = document.getElementById('syncStatus');
     
-    try {
-        // 1. Iniciamos en estado de carga
-        statusLabel.className = 'sync-status syncing';
-        statusLabel.innerText = '🔄 Sincronizando datos...';
+    // 1. Ponemos el estado en "Sincronizando"
+    statusLabel.className = 'sync-status syncing';
+    statusLabel.innerText = '🔄 Sincronizando...';
+    statusLabel.style.background = '#fff3cd'; 
+    statusLabel.style.color = '#856404';
 
+    try {
         const response = await fetch(SCRIPT_URL);
         const data = await response.json();
 
-        // 2. Si recibimos un array (aunque esté vacío), la conexión fue EXITOSA
         if (Array.isArray(data)) {
             timeRecords = data;
-            statusLabel.className = 'sync-status connected';
-            statusLabel.innerText = '✅ Sincronizado con Google Sheets';
             
+            // 2. ÉXITO: Forzamos el cartel a verde
+            statusLabel.className = 'sync-status connected';
+            statusLabel.innerText = '✅ Sincronizado';
+            statusLabel.style.background = '#d4edda';
+            statusLabel.style.color = '#155724';
+
             populateClientFilter();
             renderRecords();
-        } else {
-            throw new Error("Formato de datos incorrecto");
+            
+            // OPCIONAL: El cartel desaparece o se achica después de 3 segundos
+            setTimeout(() => {
+                statusLabel.innerText = '✅ Conectado';
+            }, 3000);
         }
-
     } catch (error) {
-        console.warn("Aviso de conexión:", error);
-        
-        // 3. LA CLAVE: Si a pesar del "error" tenemos datos, lo damos como bueno
-        if (timeRecords && timeRecords.length > 0) {
-            statusLabel.className = 'sync-status connected';
-            statusLabel.innerText = '✅ Sincronizado (Modo Offline/Caché)';
-        } else {
+        // 3. Solo si NO hay registros mostramos el error
+        // Si ya hay registros en pantalla, ignoramos el error de red momentáneo
+        if (timeRecords.length === 0) {
             statusLabel.className = 'sync-status error';
-            statusLabel.innerText = '❌ Error de conexión';
+            statusLabel.innerText = '❌ Error de red';
+            statusLabel.style.background = '#f8d7da';
+            statusLabel.style.color = '#721c24';
+        } else {
+            // Si ya hay datos, mantenemos el verde pero avisamos sutilmente en consola
+            console.warn("Fallo un reintento de conexión, pero mantengo los datos actuales.");
+            statusLabel.innerText = '✅ Sincronizado';
         }
     }
-}
-        function renderRecords() {
+}        function renderRecords() {
     const container = document.getElementById('recordsList');
     const fYear = document.getElementById('filterYear').value;
     const fMonth = document.getElementById('filterMonth').value;

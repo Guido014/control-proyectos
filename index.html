@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Proyectos | CONE</title>
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --cone-red: #E30613; /* Rojo institucional CONE */
+            --cone-red: #E30613; 
             --cone-black: #1A1A1A;
             --cone-light-gray: #F4F4F4;
             --cone-white: #FFFFFF;
@@ -29,7 +28,7 @@
             z-index: 1;
         }
 
-        /* LOGO DE FONDO (MARCA DE AGUA) */
+        /* Marca de agua de logo */
         body::before {
             content: "";
             position: fixed;
@@ -38,18 +37,17 @@
             transform: translate(-50%, -50%);
             width: 60%; 
             height: 60%;
-            background-image: url('Logo-03 - Copy.png'); /* Asegúrate de que el nombre coincida */
+            background-image: url('Logo-03 - Copy.png');
             background-repeat: no-repeat;
             background-position: center;
             background-size: contain;
-            opacity: 0.05; /* Sutil para no estorbar la lectura */
+            opacity: 0.05;
             z-index: -1;
             pointer-events: none;
         }
 
         .container { max-width: 1200px; margin: 0 auto; }
 
-        /* HEADER DINÁMICO */
         .header {
             background: var(--cone-white);
             padding: 30px 20px;
@@ -60,7 +58,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            position: relative;
+            position: relative; 
             border-bottom: 5px solid var(--cone-red);
         }
 
@@ -73,66 +71,27 @@
             margin-bottom: 5px;
         }
 
-        .header h1 { 
-            font-size: 2rem; 
-            font-weight: 700;
-            color: var(--cone-black);
-        }
-
-        /* STATUS DE SINCRONIZACIÓN */
-        #statusWrapper {
-            overflow: hidden;
-            transition: all 0.5s ease;
-            height: 0px; 
-            opacity: 0;
-        }
-        .sync-status {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-top: 10px;
-            font-weight: 700;
-        }
+        #statusWrapper { overflow: hidden; transition: all 0.5s ease; height: 0px; opacity: 0; }
+        .sync-status { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; margin-top: 10px; font-weight: 700; }
         .sync-status.connected { background: #d4edda; color: #155724; }
-        .sync-status.syncing { background: #fff3cd; color: #856404; }
 
         .refresh-btn {
             position: absolute;
             right: 20px;
-            top: 30px;
+            top: 50%;
+            transform: translateY(-50%);
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             opacity: 0.4;
             transition: 0.3s;
         }
-        .refresh-btn:hover { opacity: 1; color: var(--cone-red); }
 
-        /* CONTENIDO PRINCIPAL */
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
+        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .card { background: var(--cone-white); padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .card h2 { font-size: 1.3rem; margin-bottom: 25px; border-left: 5px solid var(--cone-red); padding-left: 15px; text-transform: uppercase; }
 
-        .card {
-            background: var(--cone-white);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }
-
-        .card h2 {
-            font-size: 1.3rem;
-            margin-bottom: 25px;
-            border-left: 5px solid var(--cone-red);
-            padding-left: 15px;
-            text-transform: uppercase;
-        }
-
-        /* FORMULARIO */
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; color: #555; }
         
@@ -145,11 +104,9 @@
             font-size: 1rem;
             transition: 0.3s;
         }
-        input:focus { border-color: var(--cone-red); outline: none; }
-
-        /* ELIMINAR FLECHAS DE NÚMERO */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input:focus, select:focus { border-color: var(--cone-red); outline: none; }
+        
+        .manual-input { margin-top: 10px; border-color: var(--cone-red); display: none; }
 
         .btn {
             background: var(--cone-red);
@@ -157,7 +114,6 @@
             padding: 15px;
             border: none;
             border-radius: 10px;
-            font-size: 1rem;
             font-weight: 700;
             text-transform: uppercase;
             cursor: pointer;
@@ -167,40 +123,14 @@
         .btn:hover { background: var(--cone-black); transform: translateY(-2px); }
 
         /* ESTADÍSTICAS */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        .stat-card {
-            background: var(--cone-black);
-            color: white;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            border-bottom: 4px solid var(--cone-red);
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: var(--cone-black); color: white; padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--cone-red); }
         .stat-card h3 { font-size: 1.5rem; margin-bottom: 2px; }
         .stat-card p { font-size: 0.65rem; text-transform: uppercase; opacity: 0.7; }
 
-        .filters {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        /* LISTADO */
+        .filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .records-list { max-height: 500px; overflow-y: auto; }
-        .record-item {
-            background: #fff;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            border-left: 5px solid var(--cone-red);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
+        .record-item { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 5px solid var(--cone-red); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .record-header { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 5px; }
         .record-hours { background: var(--cone-black); color: white; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; }
         .record-info { font-size: 0.8rem; color: #666; line-height: 1.4; }
@@ -214,9 +144,9 @@
     <div class="header">
         <span class="brand-subtitle">CONSULTORA DE NEGOCIOS EMPRESARIOS</span> 
         <h1>Control de Proyectos</h1>
-        <button onclick="loadRecords()" class="refresh-btn">🔄</button>
+        <button onclick="loadRecords()" class="refresh-btn">⭮</button>
         <div id="statusWrapper">
-            <div id="syncStatus" class="sync-status">🔄 Sincronizando...</div>
+            <div id="syncStatus" class="sync-status">⭮ Sincronizando...</div>
         </div>
     </div>
 
@@ -228,23 +158,28 @@
                     <label>Fecha</label>
                     <input type="date" id="date" required>
                 </div>
+
                 <div class="form-group">
                     <label>Cliente</label>
                     <select id="client" required>
-                        <option value="">Seleccionar...</option>
-                        <option value="ROSSI">ROSSI</option>
-                        <option value="NIP">NIP</option>
-                        <option value="BROUWER">BROUWER</option>
-                        <option value="FONTANELLA">FONTANELLA</option>
-                        <option value="PYP">PYP</option>
-                        <option value="LABORATORIOS ARRAYANES">LABORATORIOS ARRAYANES</option>
-                        <option value="FRIOPACK">FRIOPACK</option>
+                        <option value="">Cargando lista...</option>
                     </select>
+                    <input type="text" id="clientManual" class="manual-input" placeholder="Nombre de la nueva empresa...">
                 </div>
+                
+                <div class="form-group">
+                    <label>Solicitante</label>
+                    <select id="requester" required disabled>
+                        <option value="">Selecciona un cliente...</option>
+                    </select>
+                    <input type="text" id="requesterManual" class="manual-input" placeholder="Nombre de la persona...">
+                </div>
+
                 <div class="form-group">
                     <label>Horas</label>
                     <input type="number" id="hours" step="0.5" required placeholder="0.0">
                 </div>
+
                 <div class="form-group">
                     <label>Tipo</label>
                     <select id="type">
@@ -252,15 +187,13 @@
                         <option value="Presencial">🏢 Presencial</option>
                     </select>
                 </div>
+
                 <div class="form-group">
-                    <label>Solicitante</label>
-                    <input type="text" id="requester" placeholder="Ej: Santiago Avalle">
-                </div>
-                <div class="form-group">
-                    <label>Descripción Facturación</label>
+                    <label>Descripción</label>
                     <input type="text" id="billingDesc" placeholder="Detalle del trabajo...">
                 </div>
-                <button type="submit" class="btn" id="submitBtn">💾 Guardar Registro</button>
+
+                <button type="submit" class="btn" id="submitBtn">📝 Guardar </button>
             </form>
         </div>
 
@@ -278,46 +211,135 @@
                     <option value="2025">2025</option>
                 </select>
                 <select id="filterMonth">
-                    <option value="">Todos</option>
+                    <option value="">Todos los Meses</option>
                     <option value="01">Enero</option>
                     <option value="02">Febrero</option>
+                    <option value="03">Marzo</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Mayo</option>
+                    <option value="06">Junio</option>
+                    <option value="07">Julio</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
                 </select>
                 <select id="filterClient">
-                    <option value="">Clientes</option>
+                    <option value="">Todos los Clientes</option>
                 </select>
             </div>
-
-            <div id="recordsList" class="records-list"></div>
+            
+            <div id="recordsList" class="records-list">Cargando historial...</div>
         </div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNF5pO9cw_Qpn3JeqUz1gH5xjDMuTJygJMekP2QI_cYU10BA65_9xnXxdzEjsuU-23/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNF5pO9cw_Qpn3JeqUz1gH5xjDMuTJygJMekP2QI_cYU10BA65_9xnXxdzEjsuU-23/exec';
+    
     let timeRecords = [];
+    let fullConfig = {};
 
+    // Base pre-cargada por si el Excel está vacío al inicio
+    const BASE_LIST = {
+        "ROSSI": ["Nombre 1 Rossi"],
+        "NIP": ["Santiago Avalle", "Magalí Iglesias"],
+        "FRIOPACK": ["Diego Lopez"]
+    };
+
+    // CONSTRUIR LISTAS DINÁMICAS (Aprende del Excel)
+    function buildDynamicLists(records) {
+        fullConfig = JSON.parse(JSON.stringify(BASE_LIST)); // Empezamos con la base
+        
+        records.forEach(r => {
+            const cli = (r.cliente || "").toUpperCase().trim();
+            const sol = (r.solicitante || "").trim();
+            
+            if (cli) {
+                if (!fullConfig[cli]) fullConfig[cli] = [];
+                if (sol && !fullConfig[cli].includes(sol)) {
+                    fullConfig[cli].push(sol);
+                }
+            }
+        });
+        updateClientDropdown();
+    }
+
+    function updateClientDropdown() {
+        const clientSelect = document.getElementById('client');
+        clientSelect.innerHTML = '<option value="">Seleccionar Cliente...</option>';
+        
+        const sortedClients = Object.keys(fullConfig).sort();
+        sortedClients.forEach(cli => {
+            const opt = document.createElement('option');
+            opt.value = opt.innerText = cli;
+            clientSelect.appendChild(opt);
+        });
+
+        const optOtro = document.createElement('option');
+        optOtro.value = "OtroCliente";
+        optOtro.innerText = "➕ Otro Cliente (Nuevo)";
+        clientSelect.appendChild(optOtro);
+    }
+
+    // EVENTOS DE SELECCIÓN
+    document.getElementById('client').addEventListener('change', function() {
+        const val = this.value;
+        const cliManual = document.getElementById('clientManual');
+        const reqSelect = document.getElementById('requester');
+        const reqManual = document.getElementById('requesterManual');
+
+        cliManual.style.display = (val === "OtroCliente") ? "block" : "none";
+        cliManual.required = (val === "OtroCliente");
+        
+        reqSelect.innerHTML = '<option value="">Seleccionar Solicitante...</option>';
+        reqSelect.disabled = (val === "");
+        reqManual.style.display = "none";
+        reqManual.required = false;
+
+        if (val && val !== "OtroCliente") {
+            const names = fullConfig[val] || [];
+            names.sort().forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = opt.innerText = n;
+                reqSelect.appendChild(opt);
+            });
+            const optOtroSol = document.createElement('option');
+            optOtroSol.value = "OtroSol";
+            optOtroSol.innerText = "➕ Otra Persona";
+            reqSelect.appendChild(optOtroSol);
+        } else if (val === "OtroCliente") {
+            const optOtroSol = document.createElement('option');
+            optOtroSol.value = "OtroSol";
+            optOtroSol.innerText = "➕ Ingresar Solicitante";
+            reqSelect.appendChild(optOtroSol);
+            reqSelect.value = "OtroSol";
+            reqSelect.dispatchEvent(new Event('change'));
+        }
+    });
+
+    document.getElementById('requester').addEventListener('change', function() {
+        const val = this.value;
+        const reqManual = document.getElementById('requesterManual');
+        reqManual.style.display = (val === "OtroSol") ? "block" : "none";
+        reqManual.required = (val === "OtroSol");
+    });
+
+    // CARGAR DATOS
     async function loadRecords() {
-        const statusLabel = document.getElementById('syncStatus');
-        const statusWrapper = document.getElementById('statusWrapper');
-        statusWrapper.style.height = '40px';
-        statusWrapper.style.opacity = '1';
-
+        const sw = document.getElementById('statusWrapper');
+        sw.style.height = '40px'; sw.style.opacity = '1';
         try {
             const response = await fetch(SCRIPT_URL);
-            const data = await response.json();
-            if (Array.isArray(data)) {
-                timeRecords = data;
-                populateClientFilter();
-                renderRecords();
-                statusLabel.innerText = '✅ Sincronizado';
-                statusLabel.className = 'sync-status connected';
-                setTimeout(() => {
-                    statusWrapper.style.height = '0px';
-                    statusWrapper.style.opacity = '0';
-                }, 2000);
-            }
+            timeRecords = await response.json();
+            buildDynamicLists(timeRecords);
+            populateClientFilter();
+            renderRecords();
+            document.getElementById('syncStatus').innerText = '✅ Sincronizado';
+            setTimeout(() => { sw.style.height = '0px'; sw.style.opacity = '0'; }, 2000);
         } catch (e) {
-            statusLabel.innerText = '❌ Error de red';
+            document.getElementById('syncStatus').innerText = '❌ Error de Red';
         }
     }
 
@@ -327,12 +349,14 @@
         const fMonth = document.getElementById('filterMonth').value;
         const fClient = document.getElementById('filterClient').value;
 
-        const filtered = timeRecords.filter(r => {
+        let filtered = timeRecords.filter(r => {
             const rDate = String(r.fecha);
             return (!fYear || rDate.includes(fYear)) &&
                    (!fMonth || rDate.includes("-" + fMonth + "-")) &&
                    (!fClient || r.cliente === fClient);
         });
+
+        filtered.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
         document.getElementById('totalHours').innerText = filtered.reduce((acc, r) => acc + (parseFloat(r.horas) || 0), 0).toFixed(1);
         document.getElementById('totalClients').innerText = new Set(filtered.map(r => r.cliente)).size;
@@ -344,10 +368,7 @@
                     <span>${r.cliente}</span>
                     <span class="record-hours">${r.horas}h</span>
                 </div>
-                <div class="record-info">
-                    📅 ${r.fecha.split('T')[0]} | 👤 ${r.solicitante || '---'}<br>
-                    📝 ${r.descripcion || ''}
-                </div>
+                <div class="record-info">📅 ${r.fecha} | 👤 ${r.solicitante}<br>📝 ${r.descripcion}</div>
             </div>
         `).join('') || '<p style="text-align:center; color:#999;">Sin registros</p>';
     }
@@ -355,21 +376,28 @@
     function populateClientFilter() {
         const clients = [...new Set(timeRecords.map(r => r.cliente))].filter(Boolean).sort();
         const select = document.getElementById('filterClient');
-        select.innerHTML = '<option value="">Clientes</option>' + 
+        select.innerHTML = '<option value="">Todos los Clientes</option>' + 
             clients.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
+    // GUARDAR
     document.getElementById('timeForm').onsubmit = async function(e) {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         btn.disabled = true; btn.innerText = '⏳ Guardando...';
 
+        let finalClient = document.getElementById('client').value;
+        if (finalClient === 'OtroCliente') finalClient = document.getElementById('clientManual').value;
+
+        let finalSol = document.getElementById('requester').value;
+        if (finalSol === 'OtroSol') finalSol = document.getElementById('requesterManual').value;
+
         const data = {
             date: document.getElementById('date').value,
-            client: document.getElementById('client').value,
+            client: finalClient.toUpperCase(),
             hours: document.getElementById('hours').value,
             type: document.getElementById('type').value,
-            requester: document.getElementById('requester').value,
+            requester: finalSol,
             description: document.getElementById('billingDesc').value
         };
 
@@ -377,11 +405,15 @@
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
             this.reset();
             document.getElementById('date').valueAsDate = new Date();
-            await loadRecords();
+            document.getElementById('requester').disabled = true;
+            document.getElementById('clientManual').style.display = 'none';
+            document.getElementById('requesterManual').style.display = 'none';
+            await loadRecords(); // Recargar para aprender los nuevos datos
         } catch (e) { alert("Error al guardar"); }
-        btn.disabled = false; btn.innerText = '💾 Guardar Registro';
+        btn.disabled = false; btn.innerText = '📝 Guardar';
     };
 
+    // Filtros
     document.getElementById('filterYear').onchange = renderRecords;
     document.getElementById('filterMonth').onchange = renderRecords;
     document.getElementById('filterClient').onchange = renderRecords;

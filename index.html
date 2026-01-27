@@ -224,20 +224,39 @@
         }
 
         async function loadRecords() {
-            try {
-                const response = await fetch(SCRIPT_URL);
-                timeRecords = await response.json();
-                
-                document.getElementById('syncStatus').className = 'sync-status connected';
-                document.getElementById('syncStatus').innerText = '✅ Sincronizado con Google Sheets';
-                
-                populateClientFilter();
-                renderRecords();
-            } catch (error) {
-                document.getElementById('syncStatus').className = 'sync-status error';
-                document.getElementById('syncStatus').innerText = '❌ Error de conexión';
-            }
+    const statusLabel = document.getElementById('syncStatus');
+    try {
+        // Mostramos que está cargando
+        statusLabel.className = 'sync-status syncing';
+        statusLabel.innerText = '🔄 Sincronizando datos...';
+
+        const response = await fetch(SCRIPT_URL);
+        
+        if (!response.ok) throw new Error('Fallo en la respuesta');
+        
+        timeRecords = await response.json();
+        
+        // Si llegamos aquí, todo salió bien
+        statusLabel.className = 'sync-status connected';
+        statusLabel.innerText = '✅ Sincronizado con Google Sheets';
+        statusLabel.style.backgroundColor = '#d4edda'; // Color verde suave
+        statusLabel.style.color = '#155724';
+        
+        populateClientFilter();
+        renderRecords();
+    } catch (error) {
+        console.error("Error cargando datos:", error);
+        // Solo mostramos error si realmente no hay datos que mostrar
+        if (timeRecords.length === 0) {
+            statusLabel.className = 'sync-status error';
+            statusLabel.innerText = '❌ Error de conexión (Reintente)';
+        } else {
+            // Si ya teníamos datos, mantenemos el estado conectado
+            statusLabel.className = 'sync-status connected';
+            statusLabel.innerText = '✅ Sincronizado';
         }
+    }
+}
 
         function renderRecords() {
     const container = document.getElementById('recordsList');

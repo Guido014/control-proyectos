@@ -13,59 +13,48 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Comfortaa', cursive, sans-serif; background-color: var(--cone-light-gray); color: var(--cone-black); padding: 20px; }
         
-        /* LOGIN MEJORADO */
+        /* LOGIN */
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--cone-black); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-card { background: white; padding: 40px; border-radius: 15px; text-align: center; border-top: 5px solid var(--cone-red); width: 320px; box-shadow: 0 10px 25px rgba(255,255,255,0.1); }
-        
-        /* Wrapper para el input y el ojo */
         .pass-wrapper { position: relative; width: 100%; margin-top: 15px; margin-bottom: 15px; }
-        .pass-wrapper input { padding-right: 40px; } /* Espacio para el icono */
-        .toggle-icon {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            font-size: 1.2rem;
-            opacity: 0.6;
-            user-select: none;
-        }
+        .pass-wrapper input { padding-right: 40px; }
+        .toggle-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.2rem; opacity: 0.6; user-select: none; }
         .toggle-icon:hover { opacity: 1; }
-
         #mainApp { display: none; }
 
-        /* HEADER & BOTÓN REFRESCAR */
+        /* HEADER */
         .header { background: var(--cone-white); padding: 30px 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; position: relative; border-bottom: 5px solid var(--cone-red); }
         .brand-subtitle { color: var(--cone-red); font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
-        
-        .refresh-btn { 
-            position: absolute; right: 25px; top: 50%; transform: translateY(-50%); 
-            background: none; border: none; cursor: pointer; font-size: 1.8rem; 
-            opacity: 0.5; transition: all 0.5s ease; 
-        }
+        .refresh-btn { position: absolute; right: 25px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.8rem; opacity: 0.5; transition: all 0.5s ease; }
         .refresh-btn:hover { opacity: 1; transform: translateY(-50%) rotate(180deg); }
 
-        /* ESTRUCTURA GENERAL */
+        /* ESTILOS DE SOLAPAS (TABS) */
+        .tabs-header { display: flex; margin-bottom: 20px; border-bottom: 2px solid #eee; }
+        .tab-btn { flex: 1; padding: 15px; background: none; border: none; font-family: 'Comfortaa', sans-serif; font-weight: 700; cursor: pointer; color: #999; border-bottom: 3px solid transparent; transition: 0.3s; }
+        .tab-btn:hover { color: var(--cone-black); }
+        .tab-btn.active { color: var(--cone-red); border-bottom: 3px solid var(--cone-red); }
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* GENERAL UI */
         .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
         .card { background: var(--cone-white); padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .card h2 { font-size: 1.3rem; margin-bottom: 25px; border-left: 5px solid var(--cone-red); padding-left: 15px; text-transform: uppercase; }
-        
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; }
         input, select { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 10px; font-family: 'Comfortaa', sans-serif; outline: none; transition: 0.3s; }
         input:focus, select:focus { border-color: var(--cone-red); }
-        
         .manual-input { margin-top: 8px; border-color: var(--cone-red); display: none; background-color: #fff9f9; }
-        
         .btn { background: var(--cone-red); color: white; padding: 15px; border: none; border-radius: 10px; font-weight: 700; text-transform: uppercase; cursor: pointer; width: 100%; transition: 0.3s; }
         .btn:hover { background: var(--cone-black); }
         .btn-pdf { background: var(--cone-black); margin-top: 10px; font-size: 0.8rem; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-cancel { background: #666; margin-top: 8px; font-size: 0.7rem; padding: 10px; display: none; }
 
+        /* DASHBOARD & LISTS */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .stat-card { background: var(--cone-black); color: white; padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--cone-red); }
         .filters { display: grid; grid-template-columns: 0.6fr 1fr 0.8fr 1.2fr; gap: 8px; margin-bottom: 20px; }
-
         .records-list { min-height: 400px; max-height: 500px; overflow-y: auto; border-top: 1px solid #eee; padding-top: 15px; }
         .record-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--cone-red); box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; }
         .record-body { flex: 1; }
@@ -74,7 +63,6 @@
         .record-actions { display: flex; flex-direction: column; gap: 10px; margin-left: 15px; justify-content: center; }
         .action-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.5; transition: 0.2s; }
         .action-btn:hover { opacity: 1; transform: scale(1.2); }
-
         #statusWrapper { overflow: hidden; transition: all 0.5s ease; height: 0px; opacity: 0; text-align: center; }
         .sync-status { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; margin-top: 10px; font-weight: 700; background: #eee; }
 
@@ -87,12 +75,10 @@
     <div class="login-card">
         <div style="font-size: 40px; margin-bottom: 10px;">🔒</div>
         <h2>Acceso Restringido</h2>
-        
         <div class="pass-wrapper">
             <input type="password" id="passInput" placeholder="Contraseña..." onkeypress="if(event.key==='Enter') verifyPass()">
             <span class="toggle-icon" onclick="togglePassVisibility()">👁️</span>
         </div>
-
         <button onclick="verifyPass()" class="btn">Entrar</button>
         <p id="loginError" style="color:red; font-size:12px; margin-top:10px; display:none;">Contraseña incorrecta</p>
     </div>
@@ -108,30 +94,56 @@
         </div>
 
         <div class="main-content">
+            
             <div class="card">
-                <h2 id="formTitle">➕ Registrar Horas</h2>
-                <form id="timeForm">
-                    <input type="hidden" id="editId">
-                    <div class="form-group"><label>Fecha</label><input type="date" id="date" required></div>
-                    <div class="form-group">
-                        <label>Cliente</label>
-                        <select id="client" required><option value="">Cargando...</option></select>
-                        <input type="text" id="clientManual" class="manual-input" placeholder="Nueva empresa...">
-                    </div>
-                    <div class="form-group">
-                        <label>Solicitante</label>
-                        <select id="requester" required disabled><option value="">Selecciona cliente...</option></select>
-                        <input type="text" id="requesterManual" class="manual-input" placeholder="Nombre persona...">
-                    </div>
-                    <div class="form-group"><label>Horas</label><input type="number" id="hours" step="0.5" required></div>
-                    <div class="form-group"><label>Descripción</label><input type="text" id="billingDesc"></div>
-                    <button type="submit" id="submitBtn" class="btn">Guardar ✔</button>
-                    <button type="button" id="cancelBtn" onclick="cancelEdit()" class="btn btn-cancel">Cancelar Edición</button>
-                </form>
+                <div class="tabs-header">
+                    <button class="tab-btn active" onclick="switchTab('hours')">⏱ Registrar Horas</button>
+                    <button class="tab-btn" onclick="switchTab('projects')">🚀 Nuevo Proyecto</button>
+                </div>
+
+                <div id="tab-hours" class="tab-content active">
+                    <form id="timeForm">
+                        <input type="hidden" id="editId">
+                        <div class="form-group"><label>Fecha</label><input type="date" id="date" required></div>
+                        <div class="form-group">
+                            <label>Cliente</label>
+                            <select id="client" required><option value="">Cargando...</option></select>
+                            <input type="text" id="clientManual" class="manual-input" placeholder="Nueva empresa...">
+                        </div>
+                        <div class="form-group">
+                            <label>Solicitante</label>
+                            <select id="requester" required disabled><option value="">Selecciona cliente...</option></select>
+                            <input type="text" id="requesterManual" class="manual-input" placeholder="Nombre persona...">
+                        </div>
+                        <div class="form-group"><label>Horas Trabajadas</label><input type="number" id="hours" step="0.5" required></div>
+                        <div class="form-group"><label>Descripción</label><input type="text" id="billingDesc"></div>
+                        <button type="submit" id="submitBtn" class="btn">Guardar Horas ✔</button>
+                        <button type="button" id="cancelBtn" onclick="cancelEdit()" class="btn btn-cancel">Cancelar Edición</button>
+                    </form>
+                </div>
+
+                <div id="tab-projects" class="tab-content">
+                    <form id="projectForm">
+                        <div class="form-group">
+                            <label>Cliente Asignado</label>
+                            <select id="projectClient" required><option value="">Cargando...</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Horas Estimadas Totales</label>
+                            <input type="number" id="projectHours" step="1" placeholder="Ej: 50" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tiempo de Entrega (Estimado)</label>
+                            <input type="date" id="projectDeadline" required>
+                        </div>
+                        <br>
+                        <button type="submit" id="projectSubmitBtn" class="btn" style="background-color: var(--cone-black);">Crear Proyecto 🚀</button>
+                    </form>
+                </div>
             </div>
 
             <div class="card">
-                <h2>📈 Resumen</h2>
+                <h2>📈 Resumen Horas</h2>
                 <div class="stats-grid">
                     <div class="stat-card"><h3 id="totalHours">0.0</h3><p style="font-size:9px">HORAS</p></div>
                     <div class="stat-card"><h3 id="totalClients">0</h3><p style="font-size:9px">CLIENTES</p></div>
@@ -163,37 +175,42 @@
     
     let timeRecords = [];
 
-    // --- NUEVA LÓGICA DE LOGIN ---
+    // --- MANEJO DE SOLAPAS ---
+    function switchTab(tabName) {
+        // Remover clase active de todos
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Agregar active al seleccionado
+        if (tabName === 'hours') {
+            document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+            document.getElementById('tab-hours').classList.add('active');
+        } else {
+            document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+            document.getElementById('tab-projects').classList.add('active');
+        }
+    }
+
+    // --- LOGIN ---
     function togglePassVisibility() {
         const input = document.getElementById('passInput');
         const icon = document.querySelector('.toggle-icon');
-        
-        if (input.type === "password") {
-            input.type = "text";
-            icon.innerText = "🔒"; // Cambia icono al estar visible
-        } else {
-            input.type = "password";
-            icon.innerText = "👁️"; // Cambia icono al estar oculto
-        }
+        if (input.type === "password") { input.type = "text"; icon.innerText = "🔒"; } 
+        else { input.type = "password"; icon.innerText = "👁️"; }
     }
 
     function verifyPass() {
         const pass = document.getElementById('passInput').value;
-        // .trim() elimina espacios al inicio y final por si se colaron
         if (pass.trim() === "bejerman23+") {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             loadRecords();
         } else {
             document.getElementById('loginError').style.display = 'block';
-            // Pequeña animación de error (shake)
-            const card = document.querySelector('.login-card');
-            card.style.transform = "translateX(5px)";
-            setTimeout(() => card.style.transform = "translateX(-5px)", 100);
-            setTimeout(() => card.style.transform = "translateX(0)", 200);
         }
     }
 
+    // --- CARGA DE DATOS ---
     const daySelect = document.getElementById('filterDay');
     for(let i=1; i<=31; i++) {
         let val = i < 10 ? '0'+i : i;
@@ -215,6 +232,62 @@
         } catch (e) { ss.innerText = '❌ Error'; }
     }
 
+    // --- FORMULARIO DE PROYECTOS (NUEVO) ---
+    document.getElementById('projectForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('projectSubmitBtn');
+        btn.disabled = true; btn.innerText = 'Creando...';
+
+        const data = {
+            action: "save_project",
+            client: document.getElementById('projectClient').value,
+            hours: document.getElementById('projectHours').value,
+            deliveryDate: document.getElementById('projectDeadline').value
+        };
+
+        try {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+            const result = await res.json();
+            if(result.success) {
+                alert("✅ Proyecto creado con éxito en la hoja 'Proyectos'");
+                document.getElementById('projectForm').reset();
+            } else {
+                alert("Error: " + result.error);
+            }
+        } catch (e) { alert("Error de conexión"); }
+        
+        btn.disabled = false; btn.innerText = 'Crear Proyecto 🚀';
+    };
+
+    // --- FORMULARIO DE HORAS (EXISTENTE) ---
+    document.getElementById('timeForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const editId = document.getElementById('editId').value;
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true; btn.innerText = '⌛...';
+        
+        let finalClient = document.getElementById('client').value === 'OTRO' ? document.getElementById('clientManual').value : document.getElementById('client').value;
+        let finalSol = document.getElementById('requester').value === 'otro_sol' ? document.getElementById('requesterManual').value : document.getElementById('requester').value;
+
+        const data = { 
+            action: editId ? "edit" : "save",
+            id: editId,
+            date: document.getElementById('date').value, 
+            client: finalClient.toUpperCase(), 
+            hours: document.getElementById('hours').value, 
+            requester: finalSol, 
+            description: document.getElementById('billingDesc').value
+        };
+
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+            cancelEdit();
+            await loadRecords();
+        } catch (e) { alert("Error"); }
+        btn.disabled = false;
+    };
+
+    // --- RENDERIZADO Y UTILIDADES ---
     function renderRecords() {
         const fClient = document.getElementById('filterClient').value;
         const fMonth = document.getElementById('filterMonth').value;
@@ -249,76 +322,20 @@
         `).join('') || '<p style="text-align:center; padding:20px; color:#999;">Sin registros</p>';
     }
 
-    function prepareEdit(id) {
-        const r = timeRecords.find(rec => rec.id.toString() === id.toString());
-        if (!r) return;
-        document.getElementById('editId').value = r.id;
-        document.getElementById('date').value = r.fecha;
-        document.getElementById('client').value = r.cliente;
-        document.getElementById('client').dispatchEvent(new Event('change'));
-        setTimeout(() => { 
-            document.getElementById('requester').value = r.solicitante; 
-            document.getElementById('hours').value = r.horas;
-            document.getElementById('billingDesc').value = r.descripcion;
-        }, 100);
-        document.getElementById('formTitle').innerText = "✎ Editar Registro";
-        document.getElementById('submitBtn').innerText = "Actualizar ✔";
-        document.getElementById('cancelBtn').style.display = "block";
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function cancelEdit() {
-        document.getElementById('timeForm').reset();
-        document.getElementById('editId').value = "";
-        document.getElementById('formTitle').innerText = "➕ Registrar Horas";
-        document.getElementById('submitBtn').innerText = "Guardar ✔";
-        document.getElementById('cancelBtn').style.display = "none";
-    }
-
-    async function deleteRecord(id) {
-        if(!confirm("¿Borrar este registro?")) return;
-        const ss = document.getElementById('syncStatus');
-        ss.innerText = '🗑 Borrando...';
-        try {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "delete", id: id }) });
-            await loadRecords();
-        } catch (e) { alert("Error al borrar"); }
-    }
-
-    document.getElementById('timeForm').onsubmit = async function(e) {
-        e.preventDefault();
-        const editId = document.getElementById('editId').value;
-        const btn = document.getElementById('submitBtn');
-        btn.disabled = true; btn.innerText = '⌛...';
-        
-        let finalClient = document.getElementById('client').value === 'OTRO' ? document.getElementById('clientManual').value : document.getElementById('client').value;
-        let finalSol = document.getElementById('requester').value === 'otro_sol' ? document.getElementById('requesterManual').value : document.getElementById('requester').value;
-
-        const data = { 
-            action: editId ? "edit" : "save",
-            id: editId,
-            date: document.getElementById('date').value, 
-            client: finalClient.toUpperCase(), 
-            hours: document.getElementById('hours').value, 
-            requester: finalSol, 
-            description: document.getElementById('billingDesc').value,
-            type: "Remoto"
-        };
-
-        try {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
-            cancelEdit();
-            await loadRecords();
-        } catch (e) { alert("Error"); }
-        btn.disabled = false;
-    };
-
     function populateClientFilter() {
         const clients = [...new Set(timeRecords.map(r => r.cliente))].filter(Boolean).sort();
+        
+        // Llenar Filtro
         document.getElementById('filterClient').innerHTML = '<option value="">Cliente</option>' + clients.map(c => `<option value="${c}">${c}</option>`).join('');
+        
+        // Llenar Select de HORAS
         document.getElementById('client').innerHTML = '<option value="">Seleccionar...</option>' + clients.map(c => `<option value="${c}">${c}</option>`).join('') + '<option value="OTRO">➕ NUEVO</option>';
+        
+        // Llenar Select de PROYECTOS (Solo lista existente, sin opción "Nuevo" manual por ahora para simplificar, o podés agregarla si querés)
+        document.getElementById('projectClient').innerHTML = '<option value="">Seleccionar...</option>' + clients.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
+    // Eventos del form de Horas
     document.getElementById('client').onchange = function() {
         const val = this.value;
         document.getElementById('clientManual').style.display = (val === 'OTRO') ? 'block' : 'none';
@@ -333,16 +350,47 @@
             document.getElementById('requesterManual').style.display = 'block';
         }
     };
-
     document.getElementById('requester').onchange = function() {
         document.getElementById('requesterManual').style.display = (this.value === 'otro_sol') ? 'block' : 'none';
     };
+
+    function prepareEdit(id) {
+        switchTab('hours'); // Asegurar que estamos en la solapa correcta
+        const r = timeRecords.find(rec => rec.id.toString() === id.toString());
+        if (!r) return;
+        document.getElementById('editId').value = r.id;
+        document.getElementById('date').value = r.fecha;
+        document.getElementById('client').value = r.cliente;
+        document.getElementById('client').dispatchEvent(new Event('change'));
+        setTimeout(() => { 
+            document.getElementById('requester').value = r.solicitante; 
+            document.getElementById('hours').value = r.horas;
+            document.getElementById('billingDesc').value = r.descripcion;
+        }, 100);
+        document.getElementById('submitBtn').innerText = "Actualizar ✔";
+        document.getElementById('cancelBtn').style.display = "block";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+        document.getElementById('timeForm').reset();
+        document.getElementById('editId').value = "";
+        document.getElementById('submitBtn').innerText = "Guardar Horas ✔";
+        document.getElementById('cancelBtn').style.display = "none";
+    }
+
+    async function deleteRecord(id) {
+        if(!confirm("¿Borrar este registro?")) return;
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "delete", id: id }) });
+            await loadRecords();
+        } catch (e) { alert("Error al borrar"); }
+    }
 
     function generatePDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         const clientName = document.getElementById('filterClient').value;
-        
         if (!clientName) { alert("⚠️ Selecciona un cliente primero"); return; }
         
         doc.setFontSize(20); doc.setTextColor(227, 6, 19); doc.text("CONE", 14, 20);
@@ -353,13 +401,10 @@
         const rows = filteredData.map(r => [r.fecha, r.solicitante, r.descripcion, r.horas + "h"]);
         
         doc.autoTable({ 
-            startY: 40, 
-            head: [['Fecha', 'Solicitante', 'Descripción', 'Horas']], 
-            body: rows,
+            startY: 40, head: [['Fecha', 'Solicitante', 'Descripción', 'Horas']], body: rows,
             foot: [['', '', 'TOTAL', totalHoras.toFixed(1) + "h"]],
             footStyles: { fillColor: [227, 6, 19], textColor: [255, 255, 255], fontStyle: 'bold' } 
         });
-        
         doc.save(`Reporte_${clientName}.pdf`);
     }
 

@@ -462,8 +462,22 @@
 
                 <!-- FILTROS -->
                 <div style="display:flex; gap:8px; margin-bottom:15px; flex-wrap: wrap;">
-                    <select id="fDay" style="width:80px; font-size:1rem;"><option value="">Día</option></select>
-                    <select id="fMonth" style="width:120px; font-size:1rem;"><option value="">Mes</option><option value="01">Ene</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Abr</option><option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Ago</option><option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dic</option></select>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <label style="margin: 0; font-size: 0.7rem;">Desde Día:</label>
+                        <select id="fDayFrom" style="width:70px; font-size:1rem;"><option value="">Día</option></select>
+                    </div>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <label style="margin: 0; font-size: 0.7rem;">Hasta Día:</label>
+                        <select id="fDayTo" style="width:70px; font-size:1rem;"><option value="">Día</option></select>
+                    </div>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <label style="margin: 0; font-size: 0.7rem;">Desde Mes:</label>
+                        <select id="fMonthFrom" style="width:100px; font-size:1rem;"><option value="">Mes</option><option value="01">Ene</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Abr</option><option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Ago</option><option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dic</option></select>
+                    </div>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <label style="margin: 0; font-size: 0.7rem;">Hasta Mes:</label>
+                        <select id="fMonthTo" style="width:100px; font-size:1rem;"><option value="">Mes</option><option value="01">Ene</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Abr</option><option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Ago</option><option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dic</option></select>
+                    </div>
                     <select id="fYear" style="width:100px; font-size:1rem;"><option value="2025">2025</option><option value="2026">2026</option><option value="2024">2024</option></select>
                     <select id="fClient" style="flex:1; font-size:1rem;"><option value="">Cliente</option></select>
                 </div>
@@ -574,9 +588,11 @@
         }
     }
 
-    // Inicializar select de días
-    const dSel = document.getElementById('fDay');
-    for(let i=1; i<=31; i++) { let v = i < 10 ? '0'+i : i; dSel.innerHTML += `<option value="${v}">${v}</option>`; }
+    // Inicializar select de días (rango)
+    ['fDayFrom', 'fDayTo'].forEach(id => {
+        const dSel = document.getElementById(id);
+        for(let i=1; i<=31; i++) { let v = i < 10 ? '0'+i : i; dSel.innerHTML += `<option value="${v}">${v}</option>`; }
+    });
 
     // TABS
     function switchLeftTab(t) {
@@ -680,14 +696,42 @@
     // LISTADO PRINCIPAL
     function renderList() {
         const c = document.getElementById('fClient').value;
-        const m = document.getElementById('fMonth').value;
-        const d = document.getElementById('fDay').value;
+        const mFrom = document.getElementById('fMonthFrom').value;
+        const mTo = document.getElementById('fMonthTo').value;
+        const dFrom = document.getElementById('fDayFrom').value;
+        const dTo = document.getElementById('fDayTo').value;
         const y = document.getElementById('fYear').value;
 
         const filtered = timeRecords.filter(r => {
             if(!r.fecha) return false;
             const p = r.fecha.split('-');
-            return (!c || r.cliente === c) && (!y || p[0] === y) && (!m || p[1] === m) && (!d || p[2] === d);
+            const rYear = p[0];
+            const rMonth = p[1];
+            const rDay = p[2];
+            
+            // Filtrar por cliente
+            if(c && r.cliente !== c) return false;
+            
+            // Filtrar por año
+            if(y && rYear !== y) return false;
+            
+            // Filtrar por rango de meses
+            if(mFrom && mTo) {
+                if(rMonth < mFrom || rMonth > mTo) return false;
+            } else {
+                if(mFrom && rMonth < mFrom) return false;
+                if(mTo && rMonth > mTo) return false;
+            }
+            
+            // Filtrar por rango de días
+            if(dFrom && dTo) {
+                if(rDay < dFrom || rDay > dTo) return false;
+            } else {
+                if(dFrom && rDay < dFrom) return false;
+                if(dTo && rDay > dTo) return false;
+            }
+            
+            return true;
         }).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
 
         // CALCULAR ESTADÍSTICAS
@@ -1049,27 +1093,85 @@
 
     function generatePDFHoras(clienteName) {
         try {
-            const data = timeRecords.filter(r => r.cliente === clienteName);
+            // Obtener los mismos filtros que en renderList
+            const c = document.getElementById('fClient').value;
+            const mFrom = document.getElementById('fMonthFrom').value;
+            const mTo = document.getElementById('fMonthTo').value;
+            const dFrom = document.getElementById('fDayFrom').value;
+            const dTo = document.getElementById('fDayTo').value;
+            const y = document.getElementById('fYear').value;
+            
+            // Aplicar los mismos filtros que renderList
+            const data = timeRecords.filter(r => {
+                if(!r.fecha) return false;
+                const p = r.fecha.split('-');
+                const rYear = p[0];
+                const rMonth = p[1];
+                const rDay = p[2];
+                
+                // Filtrar por cliente
+                if(c && r.cliente !== c) return false;
+                
+                // Filtrar por año
+                if(y && rYear !== y) return false;
+                
+                // Filtrar por rango de meses
+                if(mFrom && mTo) {
+                    if(rMonth < mFrom || rMonth > mTo) return false;
+                } else {
+                    if(mFrom && rMonth < mFrom) return false;
+                    if(mTo && rMonth > mTo) return false;
+                }
+                
+                // Filtrar por rango de días
+                if(dFrom && dTo) {
+                    if(rDay < dFrom || rDay > dTo) return false;
+                } else {
+                    if(dFrom && rDay < dFrom) return false;
+                    if(dTo && rDay > dTo) return false;
+                }
+                
+                return true;
+            }).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
             
             if (data.length === 0) {
-                showNotification('warning', 'Sin Registros', 'No hay registros para este cliente');
+                showNotification('warning', 'Sin Registros', 'No hay registros que coincidan con los filtros seleccionados');
                 return;
             }
             
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
             
-            // ENCABEZADO
+            // ENCABEZADO PRINCIPAL
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(16);
+            doc.setFontSize(24);
             doc.setTextColor(227, 6, 19); // Rojo CONE
-            doc.text(`REPORTE DE HORAS`, 14, 20);
+            doc.text(`CONE`, 14, 15);
+            
+            // SUBTÍTULO
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            doc.setTextColor(26, 26, 26); // Negro
+            doc.text(`Consultora de Negocios Empresarios S.R.L.`, 14, 24);
+            
+            // LÍNEA SEPARADORA
+            doc.setLineWidth(0.5);
+            doc.setDrawColor(227, 6, 19);
+            doc.line(14, 27, 196, 27);
+            
+            // TÍTULO DEL REPORTE
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.setTextColor(227, 6, 19);
+            doc.text(`REPORTE DE HORAS`, 14, 35);
             
             doc.setFont("helvetica", "normal");
-            doc.setFontSize(11);
-            doc.setTextColor(26, 26, 26); // Negro
-            doc.text(`Cliente: ${clienteName}`, 14, 30);
-            doc.text(`Fecha Reporte: ${new Date().toLocaleDateString('es-ES')}`, 14, 37);
+            doc.setFontSize(10);
+            doc.setTextColor(26, 26, 26);
+            doc.text(`Cliente: ${clienteName}`, 14, 42);
+            const now = new Date();
+            const fechaHora = now.toLocaleDateString('es-ES') + ' ' + now.toLocaleTimeString('es-ES');
+            doc.text(`Fecha Reporte: ${fechaHora}`, 14, 48);
             
             // TABLA
             const tableData = data.map(r => [
@@ -1080,7 +1182,7 @@
             ]);
             
             doc.autoTable({
-                startY: 45,
+                startY: 54,
                 head: [['Fecha', 'Solicitante', 'Descripción', 'Horas']],
                 body: tableData,
                 theme: 'grid',
@@ -1136,8 +1238,11 @@
     const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
     const todayYear = today.getFullYear().toString();
     
-    document.getElementById('fDay').value = todayDay;
-    document.getElementById('fMonth').value = todayMonth;
+    // Inicializar rango: desde hoy hasta hoy
+    document.getElementById('fDayFrom').value = todayDay;
+    document.getElementById('fDayTo').value = todayDay;
+    document.getElementById('fMonthFrom').value = todayMonth;
+    document.getElementById('fMonthTo').value = todayMonth;
     document.getElementById('fYear').value = todayYear;
 </script>
 </body>

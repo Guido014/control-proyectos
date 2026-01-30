@@ -124,6 +124,9 @@
         .notification.success { border-top: 5px solid #4CAF50; }
         .notification.success .notif-icon { color: #4CAF50; font-size: 2.5rem; }
         
+        .notification.confirm { border-top: 5px solid #2196F3; }
+        .notification.confirm .notif-icon { color: #2196F3; font-size: 2.5rem; }
+        
         .notif-title { 
             font-size: 1.2rem; 
             font-weight: 700; 
@@ -135,6 +138,30 @@
             color: #666; 
             line-height: 1.5;
         }
+        
+        .notif-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        .notif-btn {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+        
+        .notif-btn.confirm { background: #4CAF50; color: white; }
+        .notif-btn.confirm:hover { background: #2E7D32; }
+        
+        .notif-btn.cancel { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
+        .notif-btn.cancel:hover { background: #eee; }
         
         @keyframes slideInNotif {
             0% {
@@ -159,6 +186,91 @@
         }
         
         .notification.hide { animation: slideOutNotif 0.3s ease-out forwards; }
+
+        /* MODAL DE EDICIÓN */
+        .edit-modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 10500; 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            opacity: 0; 
+            transition: opacity 0.3s;
+        }
+        
+        .edit-modal-overlay.open { 
+            display: flex; 
+            opacity: 1; 
+        }
+        
+        .edit-modal-content { 
+            background: white; 
+            width: 90%; 
+            max-width: 500px; 
+            border-radius: 12px; 
+            padding: 30px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3); 
+            border-top: 6px solid var(--cone-red);
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideInModal 0.3s ease-out;
+        }
+        
+        .edit-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .edit-modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--cone-red);
+        }
+        
+        .edit-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #aaa;
+            transition: 0.2s;
+        }
+        
+        .edit-modal-close:hover { color: var(--cone-red); }
+        
+        .edit-modal-form .form-group {
+            margin-bottom: 18px;
+        }
+        
+        .edit-modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        .edit-modal-buttons .btn {
+            flex: 1;
+        }
+        
+        @keyframes slideInModal {
+            0% {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
 
         /* MODAL POPUP */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
@@ -197,6 +309,51 @@
     <div class="notif-icon" id="notifIcon"></div>
     <div class="notif-title" id="notifTitle"></div>
     <div class="notif-message" id="notifMessage"></div>
+    <div class="notif-buttons" id="notifButtons" style="display: none;"></div>
+</div>
+
+<!-- MODAL DE EDICIÓN -->
+<div id="editModal" class="edit-modal-overlay">
+    <div class="edit-modal-content">
+        <div class="edit-modal-header">
+            <div class="edit-modal-title">✏️ Editar Registro</div>
+            <button class="edit-modal-close" onclick="closeEditModal()">×</button>
+        </div>
+        <form id="editModalForm" class="edit-modal-form">
+            <input type="hidden" id="editModalId">
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="editModalDate" required>
+            </div>
+            <div class="form-group">
+                <label>Cliente</label>
+                <input type="text" id="editModalClient" readonly style="background: #f9f9f9;">
+            </div>
+            <div class="form-group">
+                <label>Solicitante</label>
+                <input type="text" id="editModalRequester" required>
+            </div>
+            <div class="form-group">
+                <label>Horas</label>
+                <input type="number" id="editModalHours" step="0.5" required>
+            </div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="editModalType">
+                    <option value="Remoto">Remoto</option>
+                    <option value="Presencial">Presencial</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <input type="text" id="editModalDesc" placeholder="Detalle">
+            </div>
+            <div class="edit-modal-buttons">
+                <button type="submit" class="btn">Guardar Cambios ✔</button>
+                <button type="button" onclick="closeEditModal()" class="btn" style="background: #888;">Cancelar</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div id="mainApp">
@@ -292,7 +449,7 @@
                     <label style="display: block; margin-bottom: 12px; font-weight: 700; font-size: 0.9rem; color: #666; text-transform: uppercase;">📄 Tipo de Reporte</label>
                     <select id="reportType" style="width:100%; margin-bottom: 12px; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
                         <option value="">Seleccionar tipo...</option>
-                        <option value="horas">📊 Reporte de Horas por Cliente</option>
+                        <option value="horas">📊 Horas por Cliente</option>
                     </select>
                     <button onclick="handleGeneratePDF()" class="btn" style="background: var(--cone-black);">📥 Descargar Reporte</button>
                 </div>
@@ -300,9 +457,9 @@
 
             <div id="view-calendar" style="display:none;">
                 <div class="calendar-controls">
-                    <button onclick="changeMonth(-1)" style="background: var(--cone-red); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 1.1rem; font-weight: 700; transition: 0.2s;" onmouseover="this.style.background='var(--cone-black)'" onmouseout="this.style.background='var(--cone-red)'">◀ Anterior</button>
+                    <button onclick="changeMonth(-1)" style="background: var(--cone-red); color: white; border: none; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 1.1rem; font-weight: 700; transition: 0.2s; width: 45px;" onmouseover="this.style.background='var(--cone-black)'" onmouseout="this.style.background='var(--cone-red)'">◀</button>
                     <b id="calMonthLabel" style="font-size:1.2rem; flex: 1; text-align: center;"></b>
-                    <button onclick="changeMonth(1)" style="background: var(--cone-red); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 1.1rem; font-weight: 700; transition: 0.2s;" onmouseover="this.style.background='var(--cone-black)'" onmouseout="this.style.background='var(--cone-red)'">Siguiente ▶</button>
+                    <button onclick="changeMonth(1)" style="background: var(--cone-red); color: white; border: none; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 1.1rem; font-weight: 700; transition: 0.2s; width: 45px;" onmouseover="this.style.background='var(--cone-black)'" onmouseout="this.style.background='var(--cone-red)'">▶</button>
                 </div>
                 <div class="calendar-grid" id="calendarGrid"></div>
             </div>
@@ -316,17 +473,19 @@
     let currentCalDate = new Date();
 
     // NOTIFICACIONES PERSONALIZADAS
-    function showNotification(type, title, message, duration = 3000) {
+    function showNotification(type, title, message, duration = 3000, buttons = null) {
         const notif = document.getElementById('notification');
         const icon = document.getElementById('notifIcon');
         const titleEl = document.getElementById('notifTitle');
         const msgEl = document.getElementById('notifMessage');
+        const buttonsContainer = document.getElementById('notifButtons');
         
         // Configurar icono y tipo
         const icons = {
             warning: '⚠️',
             error: '❌',
-            success: '✅'
+            success: '✅',
+            confirm: '❓'
         };
         
         icon.textContent = icons[type] || '📌';
@@ -335,9 +494,31 @@
         
         // Remover clase hide si existe
         notif.classList.remove('hide');
-        notif.classList.remove('warning', 'error', 'success');
+        notif.classList.remove('warning', 'error', 'success', 'confirm');
         notif.classList.add(type);
         notif.classList.add('show');
+        
+        // Manejar botones
+        if (buttons) {
+            buttonsContainer.innerHTML = '';
+            buttons.forEach(btn => {
+                const button = document.createElement('button');
+                button.className = `notif-btn ${btn.class}`;
+                button.textContent = btn.text;
+                button.onclick = () => {
+                    btn.callback();
+                    notif.classList.add('hide');
+                    setTimeout(() => {
+                        notif.classList.remove('show', 'hide');
+                    }, 300);
+                };
+                buttonsContainer.appendChild(button);
+            });
+            buttonsContainer.style.display = 'flex';
+            duration = 0; // No auto-hide si hay botones
+        } else {
+            buttonsContainer.style.display = 'none';
+        }
         
         // Ocultar después del tiempo especificado
         if (duration > 0) {
@@ -555,6 +736,11 @@
         if (e.target === this) closeDayModal();
     });
 
+    // Cerrar modal de edición si se clickea afuera
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditModal();
+    });
+
 
     // OPERACIONES DE DATOS (CRUD)
     
@@ -611,19 +797,48 @@
         const r = timeRecords.find(x => x.id.toString() === id.toString());
         if(!r) return;
         
-        switchLeftTab('hours'); // Forzamos la vista al formulario
-        document.getElementById('editId').value = r.id;
-        document.getElementById('date').value = r.fecha;
-        document.getElementById('client').value = r.cliente;
-        handleSelectChange('client', 'clientManual');
-        setTimeout(() => {
-            document.getElementById('requester').value = r.solicitante;
-            document.getElementById('hours').value = r.horas;
-            document.getElementById('billingDesc').value = r.descripcion;
-            document.getElementById('submitBtn').innerText = "Actualizar ✔";
-            document.getElementById('cancelBtn').style.display = "block";
-        }, 100);
+        // Llenar modal de edición
+        document.getElementById('editModalId').value = r.id;
+        document.getElementById('editModalDate').value = r.fecha;
+        document.getElementById('editModalClient').value = r.cliente;
+        document.getElementById('editModalRequester').value = r.solicitante;
+        document.getElementById('editModalHours').value = r.horas;
+        document.getElementById('editModalType').value = r.tipo || 'Remoto';
+        document.getElementById('editModalDesc').value = r.descripcion || '';
+        
+        // Abrir modal
+        document.getElementById('editModal').classList.add('open');
     }
+    
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('open');
+    }
+    
+    // Manejar envío del formulario de edición modal
+    document.getElementById('editModalForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('editModalId').value;
+        
+        const payload = {
+            id: id,
+            action: "edit",
+            date: document.getElementById('editModalDate').value,
+            client: document.getElementById('editModalClient').value,
+            requester: document.getElementById('editModalRequester').value,
+            hours: document.getElementById('editModalHours').value,
+            type: document.getElementById('editModalType').value,
+            description: document.getElementById('editModalDesc').value
+        };
+
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            closeEditModal();
+            showNotification('success', 'Registro Actualizado', 'Los cambios se han guardado exitosamente', 3000);
+            await loadData();
+        } catch(e) { 
+            showNotification('error', 'Error', 'No se pudo actualizar el registro', 4000);
+        }
+    };
 
     function cancelEdit() {
         document.getElementById('timeForm').reset();
@@ -632,16 +847,35 @@
         document.getElementById('cancelBtn').style.display = "none";
     }
 
-    async function deleteRecord(id) {
-        if(!confirm("¿Borrar registro permanentemente?")) return;
+    function deleteRecord(id) {
         closeDayModal(); // Cerramos el modal
-        const ss = document.getElementById('syncStatus');
-        ss.style.display = 'block'; ss.innerText = "Borrando...";
         
-        try {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "delete", id: id }) });
-            await loadData();
-        } catch(e) { alert("Error al borrar"); }
+        showNotification('confirm', '⚠️ Eliminar Registro', '¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.', 0, [
+            {
+                text: 'Confirmar',
+                class: 'confirm',
+                callback: async () => {
+                    const ss = document.getElementById('syncStatus');
+                    ss.style.display = 'block'; 
+                    ss.innerText = "Eliminando...";
+                    
+                    try {
+                        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "delete", id: id }) });
+                        await loadData();
+                        showNotification('success', 'Registro Eliminado', 'El registro ha sido eliminado correctamente', 3000);
+                    } catch(e) { 
+                        showNotification('error', 'Error', 'No se pudo eliminar el registro', 4000);
+                    }
+                }
+            },
+            {
+                text: 'Cancelar',
+                class: 'cancel',
+                callback: () => {
+                    // No hacer nada, solo cerrar
+                }
+            }
+        ]);
     }
 
     function handleGeneratePDF() {

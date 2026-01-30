@@ -11,57 +11,98 @@
     <style>
         :root { --cone-red: #E30613; --cone-black: #1A1A1A; --cone-light-gray: #F4F4F4; --cone-white: #FFFFFF; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Comfortaa', cursive, sans-serif; background: var(--cone-light-gray); color: var(--cone-black); padding: 15px; font-size: 13px; }
+        body { font-family: 'Comfortaa', cursive, sans-serif; background: var(--cone-light-gray); color: var(--cone-black); padding: 25px; font-size: 16px; }
         
         /* LOGIN PERSISTENTE */
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--cone-black); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-card { background: white; padding: 30px; border-radius: 12px; text-align: center; border-top: 5px solid var(--cone-red); width: 280px; }
-        #mainApp { display: none; max-width: 1200px; margin: 0 auto; }
+        .login-card { background: white; padding: 40px; border-radius: 12px; text-align: center; border-top: 5px solid var(--cone-red); width: 320px; }
+        .login-card h2 { font-size: 2.5rem; margin-bottom: 20px; }
+        .login-card input { font-size: 1rem; padding: 12px; }
+        #mainApp { display: none; max-width: 1400px; margin: 0 auto; }
 
         /* HEADER */
-        .header { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; position: relative; border-bottom: 4px solid var(--cone-red); }
-        .brand-subtitle { color: var(--cone-red); font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-        .refresh-btn { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.3rem; opacity: 0.4; }
+        .header { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; position: relative; border-bottom: 4px solid var(--cone-red); }
+        .brand-subtitle { color: var(--cone-red); font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .header h1 { font-size: 1.8rem; margin: 8px 0; }
+        
+        /* ANIMACIÓN DE REFRESCO */
+        .refresh-btn { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.8rem; opacity: 0.6; transition: color 0.3s; }
+        .refresh-btn:hover { color: var(--cone-red); opacity: 1; }
+        .refresh-btn.spinning { animation: spin 1s infinite linear; color: var(--cone-red); opacity: 1; }
+        @keyframes spin { 
+            0% { transform: translateY(-50%) rotate(0deg); } 
+            100% { transform: translateY(-50%) rotate(360deg); } 
+        }
 
         /* TABS */
-        .tabs-header { display: flex; margin-bottom: 12px; border-bottom: 1px solid #eee; }
-        .tab-btn { flex: 1; padding: 8px; background: none; border: none; font-family: inherit; font-weight: 700; cursor: pointer; color: #aaa; border-bottom: 2px solid transparent; font-size: 0.65rem; text-transform: uppercase; }
-        .tab-btn.active { color: var(--cone-red); border-bottom: 2px solid var(--cone-red); }
+        .tabs-header { display: flex; margin-bottom: 15px; border-bottom: 2px solid #eee; }
+        .tab-btn { flex: 1; padding: 12px; background: none; border: none; font-family: inherit; font-weight: 700; cursor: pointer; color: #aaa; border-bottom: 3px solid transparent; font-size: 0.9rem; text-transform: uppercase; transition: 0.2s; }
+        .tab-btn.active { color: var(--cone-red); border-bottom: 3px solid var(--cone-red); }
+        .tab-btn:hover { color: var(--cone-black); }
 
         /* LAYOUT */
-        .main-content { display: grid; grid-template-columns: 300px 1fr; gap: 15px; }
-        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); height: fit-content; }
+        .main-content { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); height: fit-content; }
         
         /* FORMULARIOS */
-        .form-group { margin-bottom: 10px; }
-        label { display: block; margin-bottom: 3px; font-weight: 700; font-size: 0.6rem; color: #888; text-transform: uppercase; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.8rem; outline: none; }
-        .manual-input { margin-top: 5px; border-color: var(--cone-red); display: none; }
-        .btn { background: var(--cone-red); color: white; padding: 10px; border: none; border-radius: 6px; font-weight: 700; text-transform: uppercase; cursor: pointer; width: 100%; font-size: 0.75rem; transition: 0.2s; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 1rem; outline: none; }
+        .manual-input { margin-top: 8px; border-color: var(--cone-red); display: none; }
+        .btn { background: var(--cone-red); color: white; padding: 14px; border: none; border-radius: 6px; font-weight: 700; text-transform: uppercase; cursor: pointer; width: 100%; font-size: 0.95rem; transition: 0.2s; }
         .btn:hover { background: var(--cone-black); }
 
         /* LISTADO */
-        .record-item { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--cone-red); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .record-item { background: #fff; padding: 14px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--cone-red); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.2s ease; }
+        .record-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
         .record-info { flex: 1; }
-        .record-client-name { font-weight: 700; font-size: 0.8rem; }
-        .record-meta { font-size: 0.65rem; color: #888; }
-        .record-desc { font-size: 0.7rem; color: #555; margin-top: 3px; border-top: 1px solid #f9f9f9; padding-top: 3px; }
-        .record-side { text-align: right; }
-        .record-hours-badge { background: var(--cone-black); color: white; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 0.7rem; }
+        .record-client-name { font-weight: 700; font-size: 1.05rem; }
+        .record-meta { font-size: 0.85rem; color: #888; }
+        .record-desc { font-size: 0.9rem; color: #555; margin-top: 5px; border-top: 1px solid #f9f9f9; padding-top: 5px; }
+        .record-side { text-align: right; min-width: 80px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .record-hours-badge { background: var(--cone-black); color: white; padding: 4px 12px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; }
+        
+        /* BOTONES DE ACCIÓN */
+        .record-actions { display: flex; gap: 10px; }
+        .action-btn { background: none; border: none; cursor: pointer; font-size: 1.3rem; transition: all 0.2s ease; padding: 6px 10px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; }
+        .action-btn.edit { color: #4CAF50; }
+        .action-btn.edit:hover { background: rgba(76, 175, 80, 0.15); transform: scale(1.2) rotate(-5deg); color: #2E7D32; }
+        .action-btn.delete { color: #f44336; }
+        .action-btn.delete:hover { background: rgba(244, 67, 54, 0.15); transform: scale(1.2) rotate(5deg); color: #c62828; }
 
-        /* CALENDARIO */
-        .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-        .cal-header { text-align: center; font-weight: 700; font-size: 0.55rem; color: #ccc; text-transform: uppercase; }
-        .cal-day { background: #fcfcfc; border: 1px solid #eee; min-height: 80px; border-radius: 8px; padding: 5px; position: relative; cursor: pointer; }
+        /* CALENDARIO MEJORADO */
+        .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 1.1rem; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .cal-header { text-align: center; font-weight: 700; font-size: 0.8rem; color: #ccc; text-transform: uppercase; padding: 10px 0; }
+        
+        .cal-day { 
+            background: #fcfcfc; border: 1px solid #eee; min-height: 130px; border-radius: 8px; padding: 8px; 
+            position: relative; cursor: pointer; transition: all 0.2s ease; overflow: hidden;
+        }
+        .cal-day:hover { 
+            transform: scale(1.05); z-index: 10; border-color: var(--cone-red); box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+        }
         .cal-day.today { border: 2px solid var(--cone-red); }
-        .cal-num { font-weight: 700; font-size: 0.75rem; color: #ccc; }
-        .cal-chip { font-size: 0.5rem; background: #f0f0f0; padding: 1px 3px; border-radius: 3px; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid var(--cone-red); display: block; }
-        .cal-total-hours { position: absolute; bottom: 4px; right: 4px; font-size: 0.55rem; font-weight: 700; opacity: 0.6; }
+        .cal-num { font-weight: 700; font-size: 1rem; color: #ccc; margin-bottom: 3px; display: block;}
+        
+        .cal-chip { 
+            font-size: 0.7rem; background: #f0f0f0; padding: 3px 6px; border-radius: 3px; margin-bottom: 3px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid var(--cone-red); display: block; 
+        }
+        .cal-total-hours { position: absolute; bottom: 6px; right: 6px; font-size: 0.85rem; font-weight: 700; color: var(--cone-black); background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 4px; }
 
-        .sync-status { padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 700; background: #eee; margin-top: 5px; display: none; }
+        .sync-status { padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; background: #eee; margin-top: 8px; display: none; }
 
-        @media (max-width: 850px) { .main-content { grid-template-columns: 1fr; } }
+        /* MODAL POPUP */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay.open { opacity: 1; }
+        .modal-content { background: white; width: 90%; max-width: 500px; max-height: 80vh; border-radius: 12px; padding: 25px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-top: 6px solid var(--cone-red); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .modal-title { font-weight: 700; font-size: 1.3rem; color: var(--cone-black); }
+        .modal-close { background: none; border: none; font-size: 2rem; cursor: pointer; color: #aaa; }
+        .modal-body { overflow-y: auto; flex: 1; }
+
+        @media (max-width: 1000px) { .main-content { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -74,11 +115,22 @@
     </div>
 </div>
 
+<div id="dayModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle">Detalle</span>
+            <button class="modal-close" onclick="closeDayModal()">×</button>
+        </div>
+        <div class="modal-body" id="modalList">
+            </div>
+    </div>
+</div>
+
 <div id="mainApp">
     <div class="header">
         <span class="brand-subtitle">CONSULTORA DE NEGOCIOS EMPRESARIOS</span> 
-        <h1 style="font-size:1.2rem; margin:5px 0;">Control de Proyectos</h1>
-        <button onclick="loadData()" class="refresh-btn">⭮</button>
+        <h1 style="font-size:1.8rem; margin:8px 0;">Control de Proyectos</h1>
+        <button onclick="loadData()" id="refreshBtn" class="refresh-btn">⭮</button>
         <div id="syncStatus" class="sync-status">Sincronizando...</div>
     </div>
 
@@ -107,7 +159,7 @@
                     <div class="form-group"><label>Tipo</label><select id="type"><option value="Remoto">Remoto</option><option value="Presencial">Presencial</option></select></div>
                     <div class="form-group"><label>Descripción</label><input type="text" id="billingDesc" placeholder="Detalle"></div>
                     <button type="submit" id="submitBtn" class="btn">Guardar Horas ✔</button>
-                    <button type="button" id="cancelBtn" onclick="cancelEdit()" class="btn" style="display:none; background:#888; margin-top:5px;">Cancelar</button>
+                    <button type="button" id="cancelBtn" onclick="cancelEdit()" class="btn" style="display:none; background:#888; margin-top:8px;">Cancelar</button>
                 </form>
             </div>
 
@@ -132,21 +184,52 @@
             </div>
 
             <div id="view-list">
-                <div style="display:flex; gap:5px; margin-bottom:12px; flex-wrap: wrap;">
-                    <select id="fDay" style="width:60px;"><option value="">Día</option></select>
-                    <select id="fMonth" style="width:90px;"><option value="">Mes</option><option value="01">Ene</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Abr</option><option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Ago</option><option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dic</option></select>
-                    <select id="fYear" style="width:75px;"><option value="2025">2025</option><option value="2026">2026</option></select>
-                    <select id="fClient" style="flex:1;"><option value="">Cliente</option></select>
-                    <button onclick="generatePDF()" class="btn" style="width:auto; padding:0 10px; background:black;">PDF</button>
+                <!-- RESUMEN -->
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid var(--cone-red);">
+                    <div style="font-weight: 700; color: var(--cone-red); margin-bottom: 15px; font-size: 1.1rem;">📊 RESUMEN</div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px;">
+                        <div style="background: var(--cone-black); color: white; padding: 15px; border-radius: 10px; text-align: center; border-bottom: 3px solid var(--cone-red);">
+                            <div id="summaryHours" style="font-size: 2rem; font-weight: 700;">0</div>
+                            <div style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Total Horas</div>
+                        </div>
+                        <div style="background: var(--cone-black); color: white; padding: 15px; border-radius: 10px; text-align: center; border-bottom: 3px solid var(--cone-red);">
+                            <div id="summaryClients" style="font-size: 2rem; font-weight: 700;">0</div>
+                            <div style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Clientes</div>
+                        </div>
+                        <div style="background: var(--cone-black); color: white; padding: 15px; border-radius: 10px; text-align: center; border-bottom: 3px solid var(--cone-red);">
+                            <div id="summaryRecords" style="font-size: 2rem; font-weight: 700;">0</div>
+                            <div style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Registros</div>
+                        </div>
+                    </div>
                 </div>
-                <div id="recordsList" style="max-height:500px; overflow-y:auto;"></div>
+
+                <!-- FILTROS -->
+                <div style="display:flex; gap:8px; margin-bottom:15px; flex-wrap: wrap;">
+                    <select id="fDay" style="width:80px; font-size:1rem;"><option value="">Día</option></select>
+                    <select id="fMonth" style="width:120px; font-size:1rem;"><option value="">Mes</option><option value="01">Ene</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Abr</option><option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Ago</option><option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dic</option></select>
+                    <select id="fYear" style="width:100px; font-size:1rem;"><option value="2025">2025</option><option value="2026">2026</option><option value="2024">2024</option></select>
+                    <select id="fClient" style="flex:1; font-size:1rem;"><option value="">Cliente</option></select>
+                </div>
+
+                <!-- LISTADO -->
+                <div id="recordsList" style="max-height:500px; overflow-y:auto; margin-bottom:20px;"></div>
+
+                <!-- SECCIÓN DE REPORTES -->
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 10px; border-left: 5px solid var(--cone-red);">
+                    <label style="display: block; margin-bottom: 12px; font-weight: 700; font-size: 0.9rem; color: #666; text-transform: uppercase;">📄 Tipo de Reporte</label>
+                    <select id="reportType" style="width:100%; margin-bottom: 12px; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                        <option value="">Seleccionar tipo...</option>
+                        <option value="horas">📊 Reporte de Horas por Cliente</option>
+                    </select>
+                    <button onclick="handleGeneratePDF()" class="btn" style="background: var(--cone-black);">📥 Descargar Reporte</button>
+                </div>
             </div>
 
             <div id="view-calendar" style="display:none;">
                 <div class="calendar-controls">
-                    <button onclick="changeMonth(-1)">❮</button>
-                    <b id="calMonthLabel"></b>
-                    <button onclick="changeMonth(1)">❯</button>
+                    <button onclick="changeMonth(-1)" style="background: var(--cone-red); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 1.1rem; font-weight: 700; transition: 0.2s;" onmouseover="this.style.background='var(--cone-black)'" onmouseout="this.style.background='var(--cone-red)'">◀ Anterior</button>
+                    <b id="calMonthLabel" style="font-size:1.2rem; flex: 1; text-align: center;"></b>
+                    <button onclick="changeMonth(1)" style="background: var(--cone-red); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 1.1rem; font-weight: 700; transition: 0.2s;" onmouseover="this.style.background='var(--cone-black)'" onmouseout="this.style.background='var(--cone-red)'">Siguiente ▶</button>
                 </div>
                 <div class="calendar-grid" id="calendarGrid"></div>
             </div>
@@ -197,7 +280,11 @@
     // CARGA DE DATOS
     async function loadData() {
         const ss = document.getElementById('syncStatus');
+        const rBtn = document.getElementById('refreshBtn');
+        
         ss.style.display = 'block';
+        rBtn.classList.add('spinning'); // Activar animación
+
         try {
             const res = await fetch(SCRIPT_URL);
             timeRecords = await res.json();
@@ -206,6 +293,8 @@
             renderCalendar();
             ss.style.display = 'none';
         } catch(e) { ss.innerText = "Error de conexión"; }
+        
+        rBtn.classList.remove('spinning'); // Desactivar animación
     }
 
     function populateFilters() {
@@ -216,7 +305,6 @@
         document.getElementById('fClient').innerHTML = '<option value="">Todos los Clientes</option>' + clients.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
-    // LÓGICA DE CAMPOS "OTRO"
     function handleSelectChange(selId, manId) {
         const s = document.getElementById(selId);
         const m = document.getElementById(manId);
@@ -237,7 +325,7 @@
         }
     }
 
-    // LISTADO Y FILTROS
+    // LISTADO PRINCIPAL
     function renderList() {
         const c = document.getElementById('fClient').value;
         const m = document.getElementById('fMonth').value;
@@ -250,22 +338,37 @@
             return (!c || r.cliente === c) && (!y || p[0] === y) && (!m || p[1] === m) && (!d || p[2] === d);
         }).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
 
-        document.getElementById('recordsList').innerHTML = filtered.map(r => `
+        // CALCULAR ESTADÍSTICAS
+        const totalHoras = filtered.reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+        const uniqueClients = new Set(filtered.map(r => r.cliente)).size;
+        const totalRegistros = filtered.length;
+
+        // ACTUALIZAR RESUMEN
+        document.getElementById('summaryHours').innerText = totalHoras.toFixed(1);
+        document.getElementById('summaryClients').innerText = uniqueClients;
+        document.getElementById('summaryRecords').innerText = totalRegistros;
+
+        document.getElementById('recordsList').innerHTML = filtered.map(r => generateRecordHTML(r)).join('') || '<p style="text-align:center; padding:30px; opacity:0.5; font-size:1.1rem;">Sin datos</p>';
+    }
+
+    // HTML Genérico de fila (usado en Lista y en Modal)
+    function generateRecordHTML(r) {
+        return `
             <div class="record-item">
                 <div class="record-info">
                     <div class="record-client-name">${r.cliente}</div>
                     <div class="record-meta">📅 ${r.fecha.split('-').reverse().join('/')} | 👤 ${r.solicitante}</div>
-                    <div class="record-desc">📝${r.descripcion || ''}</div>
+                    <div class="record-desc">📝 ${r.descripcion || ''}</div>
                 </div>
                 <div class="record-side">
                     <span class="record-hours-badge">${r.horas}h</span>
-                    <div style="margin-top:5px; opacity:0.3;">
-                        <span onclick="prepareEdit('${r.id}')" style="cursor:pointer; margin-right:8px;">✎</span>
-                        <span onclick="deleteRecord('${r.id}')" style="cursor:pointer;">🗑</span>
+                    <div class="record-actions">
+                        <button onclick="prepareEdit('${r.id}')" class="action-btn edit" title="Editar">✎</button>
+                        <button onclick="deleteRecord('${r.id}')" class="action-btn delete" title="Eliminar">🗑</button>
                     </div>
                 </div>
             </div>
-        `).join('') || '<p style="text-align:center; padding:20px; opacity:0.5;">Sin datos</p>';
+        `;
     }
 
     // CALENDARIO
@@ -287,18 +390,22 @@
             if (day > days) break;
             const dateObj = new Date(y, m, day);
             const w = dateObj.getDay();
-            if (w === 0 || w === 6) { day++; i--; continue; }
+            if (w === 0 || w === 6) { day++; i--; continue; } // Saltar fines de semana
             if (i < offset && day === 1) { grid.innerHTML += `<div></div>`; continue; }
 
             const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             const dayData = timeRecords.filter(r => r.fecha === dStr);
             const totalH = dayData.reduce((acc, r) => acc + (parseFloat(r.horas) || 0), 0);
             
-            let chips = dayData.slice(0, 2).map(r => `<div class="cal-chip">${r.cliente}</div>`).join('');
-            if(dayData.length > 2) chips += `<div style="font-size:8px; color:red; font-weight:700;">+${dayData.length-2}</div>`;
+            // AQUI ESTA EL LIMITE DE 3 CLIENTES
+            let chips = dayData.slice(0, 3).map(r => `<div class="cal-chip">${r.cliente}</div>`).join('');
+            if(dayData.length > 3) chips += `<div style="font-size:9px; color:var(--cone-red); font-weight:700; text-align:center;">+${dayData.length-3}</div>`;
 
             const isToday = new Date().toISOString().split('T')[0] === dStr;
-            grid.innerHTML += `<div class="cal-day ${isToday?'today':''}">
+            
+            // Añadimos el onclick para abrir el modal
+            grid.innerHTML += `
+            <div class="cal-day ${isToday?'today':''}" onclick="openDayModal('${dStr}')">
                 <span class="cal-num">${day}</span>
                 <div>${chips}</div>
                 ${totalH > 0 ? `<div class="cal-total-hours">${totalH}h</div>` : ''}
@@ -308,6 +415,41 @@
     }
     function changeMonth(s) { currentCalDate.setMonth(currentCalDate.getMonth() + s); renderCalendar(); }
 
+    // GESTIÓN DEL MODAL DEL DÍA
+    function openDayModal(dateStr) {
+        const overlay = document.getElementById('dayModal');
+        const list = document.getElementById('modalList');
+        const title = document.getElementById('modalTitle');
+        
+        // Filtramos solo los registros de ese día
+        const dayData = timeRecords.filter(r => r.fecha === dateStr);
+        
+        title.innerText = `Detalle del ${dateStr.split('-').reverse().join('/')}`;
+        
+        if (dayData.length === 0) {
+            list.innerHTML = '<p style="text-align:center; padding:30px; font-size:1.1rem;">No hay horas cargadas este día.</p>';
+        } else {
+            list.innerHTML = dayData.map(r => generateRecordHTML(r)).join('');
+        }
+
+        overlay.style.display = 'flex';
+        setTimeout(() => overlay.classList.add('open'), 10);
+    }
+
+    function closeDayModal() {
+        const overlay = document.getElementById('dayModal');
+        overlay.classList.remove('open');
+        setTimeout(() => overlay.style.display = 'none', 300);
+    }
+
+    // Cerrar modal si se clickea afuera
+    document.getElementById('dayModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDayModal();
+    });
+
+
+    // OPERACIONES DE DATOS (CRUD)
+    
     // ENVÍO DE HORAS
     document.getElementById('timeForm').onsubmit = async function(e) {
         e.preventDefault();
@@ -355,11 +497,13 @@
         btn.disabled = false; btn.innerText = 'Crear Proyecto 🚀';
     };
 
-    // EDICIÓN Y BORRADO
+    // FUNCIONES DE EDICIÓN Y BORRADO (Compatibles con el Modal)
     function prepareEdit(id) {
+        closeDayModal(); // Cerramos el modal si está abierto
         const r = timeRecords.find(x => x.id.toString() === id.toString());
         if(!r) return;
-        switchLeftTab('hours');
+        
+        switchLeftTab('hours'); // Forzamos la vista al formulario
         document.getElementById('editId').value = r.id;
         document.getElementById('date').value = r.fecha;
         document.getElementById('client').value = r.cliente;
@@ -381,27 +525,133 @@
     }
 
     async function deleteRecord(id) {
-        if(!confirm("¿Borrar registro?")) return;
+        if(!confirm("¿Borrar registro permanentemente?")) return;
+        closeDayModal(); // Cerramos el modal
+        const ss = document.getElementById('syncStatus');
+        ss.style.display = 'block'; ss.innerText = "Borrando...";
+        
         try {
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "delete", id: id }) });
             await loadData();
-        } catch(e) { alert("Error"); }
+        } catch(e) { alert("Error al borrar"); }
     }
 
-    function generatePDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const cli = document.getElementById('fClient').value;
-        if(!cli) return alert("Selecciona un cliente");
-        const data = timeRecords.filter(r => r.cliente === cli);
-        doc.text(`REPORTE DE HORAS: ${cli}`, 14, 20);
-        doc.autoTable({ startY: 25, head: [['Fecha', 'Descripción', 'Horas']], body: data.map(r => [r.fecha, r.descripcion, r.horas]) });
-        doc.save(`Reporte_${cli}.pdf`);
+    function handleGeneratePDF() {
+        try {
+            const reportType = document.getElementById('reportType').value;
+            const cli = document.getElementById('fClient').value;
+            
+            if (!reportType) {
+                alert("⚠️ Selecciona un tipo de reporte");
+                return;
+            }
+            
+            if (!cli) {
+                alert("⚠️ Debes seleccionar un cliente para generar el reporte");
+                return;
+            }
+            
+            if (reportType === 'horas') {
+                generatePDFHoras(cli);
+            }
+        } catch(e) {
+            console.error("Error en handleGeneratePDF:", e);
+            alert("Error: " + e.message);
+        }
+    }
+
+    function generatePDFHoras(clienteName) {
+        try {
+            const data = timeRecords.filter(r => r.cliente === clienteName);
+            
+            if (data.length === 0) {
+                alert("⚠️ No hay registros para este cliente");
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // ENCABEZADO
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(227, 6, 19); // Rojo CONE
+            doc.text(`REPORTE DE HORAS`, 14, 20);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(11);
+            doc.setTextColor(26, 26, 26); // Negro
+            doc.text(`Cliente: ${clienteName}`, 14, 30);
+            doc.text(`Fecha Reporte: ${new Date().toLocaleDateString('es-ES')}`, 14, 37);
+            
+            // TABLA
+            const tableData = data.map(r => [
+                r.fecha.split('-').reverse().join('/'),
+                r.solicitante || '-',
+                r.descripcion || '-',
+                `${r.horas}h`
+            ]);
+            
+            doc.autoTable({
+                startY: 45,
+                head: [['Fecha', 'Solicitante', 'Descripción', 'Horas']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { 
+                    fillColor: [227, 6, 19],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    fontSize: 11,
+                    halign: 'center'
+                },
+                bodyStyles: { fontSize: 10 },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
+                columnStyles: {
+                    0: { cellWidth: 30, halign: 'center' },
+                    1: { cellWidth: 40 },
+                    2: { cellWidth: 60 },
+                    3: { cellWidth: 25, halign: 'right', fontStyle: 'bold' }
+                },
+                margin: { top: 10, left: 10, right: 10 }
+            });
+            
+            // TOTAL DE HORAS
+            const totalHoras = data.reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+            const finalY = doc.lastAutoTable.finalY + 15;
+            
+            doc.setLineWidth(0.5);
+            doc.setDrawColor(227, 6, 19);
+            doc.line(14, finalY - 5, 196, finalY - 5);
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.setTextColor(227, 6, 19);
+            doc.text(`TOTAL DE HORAS: ${totalHoras.toFixed(1)}h`, 14, finalY + 5);
+            
+            // GUARDAR
+            const fileName = `Reporte_${clienteName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+            
+            alert("✅ PDF descargado exitosamente");
+        } catch(e) {
+            console.error("Error en generatePDFHoras:", e);
+            alert("❌ Error al generar PDF: " + e.message);
+        }
     }
 
     // Eventos de filtros
     document.querySelectorAll('#view-list select').forEach(s => s.onchange = renderList);
     document.getElementById('date').valueAsDate = new Date();
+    
+    // INICIALIZAR FILTROS CON LA FECHA DE HOY
+    const today = new Date();
+    const todayDay = String(today.getDate()).padStart(2, '0');
+    const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const todayYear = today.getFullYear().toString();
+    
+    document.getElementById('fDay').value = todayDay;
+    document.getElementById('fMonth').value = todayMonth;
+    document.getElementById('fYear').value = todayYear;
 </script>
 </body>
 </html>

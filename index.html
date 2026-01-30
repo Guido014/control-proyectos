@@ -348,6 +348,16 @@
                 <label>Descripción</label>
                 <input type="text" id="editModalDesc" placeholder="Detalle">
             </div>
+            <div class="form-group">
+                <label>Consultor</label>
+                <select id="editModalConsultant">
+                    <option value="">Seleccionar...</option>
+                    <option value="Martín Serati">Martín Serati</option>
+                    <option value="Guido Chaparro">Guido Chaparro</option>
+                    <option value="OTRO">➕ OTRO</option>
+                </select>
+                <input type="text" id="editModalConsultantManual" class="manual-input" placeholder="Nombre del consultor...">
+            </div>
             <div class="edit-modal-buttons">
                 <button type="submit" class="btn">Guardar Cambios ✔</button>
                 <button type="button" onclick="closeEditModal()" class="btn" style="background: #888;">Cancelar</button>
@@ -376,6 +386,12 @@
                     <input type="hidden" id="editId">
                     <div class="form-group"><label>Fecha</label><input type="date" id="date" required></div>
                     <div class="form-group">
+                        <label>Proyecto (Opcional)</label>
+                        <select id="project" onchange="handleProjectChange()">
+                            <option value="">Sin proyecto</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>Cliente</label>
                         <select id="client" onchange="handleSelectChange('client', 'clientManual')" required></select>
                         <input type="text" id="clientManual" class="manual-input" placeholder="Nombre cliente...">
@@ -388,6 +404,16 @@
                     <div class="form-group"><label>Horas</label><input type="number" id="hours" step="0.5" required></div>
                     <div class="form-group"><label>Tipo</label><select id="type"><option value="Remoto">Remoto</option><option value="Presencial">Presencial</option></select></div>
                     <div class="form-group"><label>Descripción</label><input type="text" id="billingDesc" placeholder="Detalle"></div>
+                    <div class="form-group">
+                        <label>Consultor</label>
+                        <select id="consultant" onchange="handleSelectChange('consultant', 'consultantManual')" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="Martín Serati">Martín Serati</option>
+                            <option value="Guido Chaparro">Guido Chaparro</option>
+                            <option value="OTRO">➕ OTRO</option>
+                        </select>
+                        <input type="text" id="consultantManual" class="manual-input" placeholder="Nombre del consultor...">
+                    </div>
                     <button type="submit" id="submitBtn" class="btn">Guardar Horas ✔</button>
                     <button type="button" id="cancelBtn" onclick="cancelEdit()" class="btn" style="display:none; background:#888; margin-top:8px;">Cancelar</button>
                 </form>
@@ -402,6 +428,7 @@
                     </div>
                     <div class="form-group"><label>Presupuesto Horas</label><input type="number" id="projectHours" required></div>
                     <div class="form-group"><label>Fecha Entrega</label><input type="date" id="projectDeadline" required></div>
+                    <div class="form-group"><label>Descripción del Proyecto</label><input type="text" id="projectDesc" placeholder="Describe brevemente el proyecto..."></div>
                     <button type="submit" id="projBtn" class="btn" style="background:var(--cone-black)">Crear Proyecto 🚀</button>
                 </form>
             </div>
@@ -567,23 +594,59 @@
     }
 
     // CARGA DE DATOS
+    let proyectos = [];
+
     async function loadData() {
         const ss = document.getElementById('syncStatus');
         const rBtn = document.getElementById('refreshBtn');
         
         ss.style.display = 'block';
-        rBtn.classList.add('spinning'); // Activar animación
+        ss.innerText = 'Sincronizando...';
+        rBtn.classList.add('spinning');
 
         try {
             const res = await fetch(SCRIPT_URL);
-            timeRecords = await res.json();
+            const data = await res.json();
+            
+            // Manejar nuevo formato con horas y proyectos
+            if (data.horas && data.proyectos !== undefined) {
+                timeRecords = data.horas;
+                proyectos = data.proyectos;
+                populateProjectSelector();
+            } else {
+                // Formato antiguo (solo horas)
+                timeRecords = data;
+                proyectos = [];
+            }
+            
             populateFilters();
             renderList();
             renderCalendar();
             ss.style.display = 'none';
-        } catch(e) { ss.innerText = "Error de conexión"; }
+        } catch(e) { 
+            ss.innerText = "Error de conexión"; 
+            console.error(e);
+        }
         
-        rBtn.classList.remove('spinning'); // Desactivar animación
+        rBtn.classList.remove('spinning');
+    }
+
+    function populateProjectSelector() {
+        const projectSelect = document.getElementById('project');
+        const options = '<option value="">Sin proyecto</option>' + 
+            proyectos.map(p => `<option value="${p.id}" data-cliente="${p.cliente}" data-descripcion="${p.descripcion || ''}">${p.cliente} - ${p.descripcion || 'Sin descripción'}</option>`).join('');
+        projectSelect.innerHTML = options;
+    }
+
+    function handleProjectChange() {
+        const projectId = document.getElementById('project').value;
+        if (projectId) {
+            const proyecto = proyectos.find(p => p.id.toString() === projectId.toString());
+            if (proyecto) {
+                document.getElementById('client').value = proyecto.cliente;
+                handleSelectChange('client', 'clientManual');
+            }
+        }
     }
 
     function populateFilters() {
@@ -646,7 +709,7 @@
             <div class="record-item">
                 <div class="record-info">
                     <div class="record-client-name">${r.cliente}</div>
-                    <div class="record-meta">📅 ${r.fecha.split('-').reverse().join('/')} | 👤 ${r.solicitante}</div>
+                    <div class="record-meta">📅 ${r.fecha.split('-').reverse().join('/')} | 👤 ${r.solicitante} | 👨‍💼 ${r.consultor || '-'}</div>
                     <div class="record-desc">📝 ${r.descripcion || ''}</div>
                 </div>
                 <div class="record-side">
@@ -741,6 +804,30 @@
         if (e.target === this) closeEditModal();
     });
 
+    // Listener para mostrar/ocultar input manual de consultor en formulario principal
+    document.getElementById('consultant').addEventListener('change', function() {
+        const manualInput = document.getElementById('consultantManual');
+        if (this.value === 'OTRO') {
+            manualInput.style.display = 'block';
+            manualInput.focus();
+        } else {
+            manualInput.style.display = 'none';
+            manualInput.value = '';
+        }
+    });
+
+    // Listener para mostrar/ocultar input manual de consultor en modal
+    document.getElementById('editModalConsultant').addEventListener('change', function() {
+        const manualInput = document.getElementById('editModalConsultantManual');
+        if (this.value === 'OTRO') {
+            manualInput.style.display = 'block';
+            manualInput.focus();
+        } else {
+            manualInput.style.display = 'none';
+            manualInput.value = '';
+        }
+    });
+
 
     // OPERACIONES DE DATOS (CRUD)
     
@@ -750,6 +837,24 @@
         const btn = document.getElementById('submitBtn');
         btn.disabled = true; btn.innerText = 'GUARDANDO...';
         
+        const consultantValue = document.getElementById('consultant').value;
+        const consultant = consultantValue === 'OTRO' ? document.getElementById('consultantManual').value : consultantValue;
+        
+        const horasAAgregar = parseFloat(document.getElementById('hours').value) || 0;
+        const projectId = document.getElementById('project').value;
+        
+        // Verificar si se exceden las horas
+        let mostrarAlertaExcedida = false;
+        if (projectId) {
+            const proyecto = proyectos.find(p => p.id.toString() === projectId.toString());
+            if (proyecto) {
+                const horasRestantes = proyecto.horasEstimadas - horasAAgregar;
+                if (horasRestantes < 0) {
+                    mostrarAlertaExcedida = true;
+                }
+            }
+        }
+        
         const payload = {
             id: document.getElementById('editId').value,
             action: document.getElementById('editId').value ? "edit" : "save_hours",
@@ -758,14 +863,25 @@
             requester: document.getElementById('requester').value === 'OTRO' ? document.getElementById('requesterManual').value : document.getElementById('requester').value,
             hours: document.getElementById('hours').value,
             type: document.getElementById('type').value,
-            description: document.getElementById('billingDesc').value
+            description: document.getElementById('billingDesc').value,
+            consultor: consultant,
+            proyectoId: projectId
         };
 
         try {
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            
+            if (mostrarAlertaExcedida) {
+                showNotification('warning', '⚠️ Se Pasó de Horas', 'Se registraron más horas de las estimadas en el proyecto', 4000);
+            } else {
+                showNotification('success', 'Horas Guardadas', 'El registro se ha guardado exitosamente', 2000);
+            }
+            
             cancelEdit();
             await loadData();
-        } catch(e) { alert("Error al guardar"); }
+        } catch(e) { 
+            showNotification('error', 'Error', 'No se pudieron guardar las horas', 4000);
+        }
         btn.disabled = false; btn.innerText = 'Guardar Horas ✔';
     };
 
@@ -779,15 +895,18 @@
             action: "save_project",
             client: document.getElementById('projectClient').value === 'OTRO' ? document.getElementById('projectClientManual').value.toUpperCase() : document.getElementById('projectClient').value,
             hours: document.getElementById('projectHours').value,
-            deliveryDate: document.getElementById('projectDeadline').value
+            deliveryDate: document.getElementById('projectDeadline').value,
+            description: document.getElementById('projectDesc').value
         };
 
         try {
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-            alert("🚀 Proyecto Creado");
+            showNotification('success', 'Proyecto Creado', '🚀 El proyecto se ha creado exitosamente', 3000);
             this.reset();
             loadData();
-        } catch(e) { alert("Error"); }
+        } catch(e) { 
+            showNotification('error', 'Error', 'No se pudo crear el proyecto', 4000);
+        }
         btn.disabled = false; btn.innerText = 'Crear Proyecto 🚀';
     };
 
@@ -799,12 +918,33 @@
         
         // Llenar modal de edición
         document.getElementById('editModalId').value = r.id;
+        document.getElementById('editModalId').dataset.projectId = r.proyectoId || "";
         document.getElementById('editModalDate').value = r.fecha;
         document.getElementById('editModalClient').value = r.cliente;
         document.getElementById('editModalRequester').value = r.solicitante;
         document.getElementById('editModalHours').value = r.horas;
         document.getElementById('editModalType').value = r.tipo || 'Remoto';
         document.getElementById('editModalDesc').value = r.descripcion || '';
+        
+        // Cargar consultor
+        const consultantSelect = document.getElementById('editModalConsultant');
+        const consultantManual = document.getElementById('editModalConsultantManual');
+        
+        consultantManual.style.display = 'none';
+        consultantManual.value = '';
+        
+        if (r.consultor) {
+            if (r.consultor === 'Martín Serati' || r.consultor === 'Guido Chaparro') {
+                consultantSelect.value = r.consultor;
+            } else {
+                // Es un consultor personalizado
+                consultantSelect.value = 'OTRO';
+                consultantManual.value = r.consultor;
+                consultantManual.style.display = 'block';
+            }
+        } else {
+            consultantSelect.value = '';
+        }
         
         // Abrir modal
         document.getElementById('editModal').classList.add('open');
@@ -819,6 +959,9 @@
         e.preventDefault();
         const id = document.getElementById('editModalId').value;
         
+        const consultantValue = document.getElementById('editModalConsultant').value;
+        const consultant = consultantValue === 'OTRO' ? document.getElementById('editModalConsultantManual').value : consultantValue;
+        
         const payload = {
             id: id,
             action: "edit",
@@ -827,7 +970,9 @@
             requester: document.getElementById('editModalRequester').value,
             hours: document.getElementById('editModalHours').value,
             type: document.getElementById('editModalType').value,
-            description: document.getElementById('editModalDesc').value
+            description: document.getElementById('editModalDesc').value,
+            consultor: consultant,
+            proyectoId: document.getElementById('editModalId').dataset.projectId || ""
         };
 
         try {

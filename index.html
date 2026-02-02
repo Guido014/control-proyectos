@@ -622,7 +622,25 @@
                     <select id="reportType" style="width:100%; margin-bottom: 12px; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
                         <option value="">Seleccionar tipo...</option>
                         <option value="horas">📊 Horas por Cliente</option>
+                        <option value="proyecto">🚀 Horas por Proyecto</option>
                     </select>
+                    
+                    <!-- Selector de Cliente para reporte de Horas por Cliente -->
+                    <div id="selectorCliente" style="margin-bottom: 12px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Cliente</label>
+                        <select id="reportClient" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                            <option value="">Seleccionar cliente...</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Selector de Proyecto para reporte de Horas por Proyecto -->
+                    <div id="selectorProyecto" style="margin-bottom: 12px; display: none;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Proyecto</label>
+                        <select id="reportProject" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                            <option value="">Seleccionar proyecto...</option>
+                        </select>
+                    </div>
+                    
                     <button onclick="handleGeneratePDF()" class="btn" style="background: var(--cone-black);">📥 Descargar Reporte</button>
                 </div>
             </div>
@@ -1222,6 +1240,11 @@
             
             // Abrir modal
             document.getElementById('editModal').classList.add('open');
+            
+            // Guardar los datos originales DESPUÉS de cargar todo en el modal
+            setTimeout(() => {
+                guardarDatosOriginales();
+            }, 100);
         }, 50);
     }
     
@@ -1229,14 +1252,64 @@
         document.getElementById('editModal').classList.remove('open');
     }
     
+    // Guardar datos originales cuando se abre el modal de edición
+    let datosOriginales = {};
+    
+    function guardarDatosOriginales() {
+        datosOriginales = {
+            fecha: document.getElementById('editModalDate').value,
+            cliente: document.getElementById('editModalClient').value,
+            solicitante: document.getElementById('editModalRequester').value,
+            horas: document.getElementById('editModalHours').value,
+            tipo: document.getElementById('editModalType').value,
+            descripcion: document.getElementById('editModalDesc').value,
+            consultor: document.getElementById('editModalConsultant').value,
+            consultorManual: document.getElementById('editModalConsultantManual').value,
+            proyecto: document.getElementById('editModalProject').value
+        };
+        console.log('Datos originales guardados:', datosOriginales);
+    }
+    
+    function hayChanges() {
+        const datosActuales = {
+            fecha: document.getElementById('editModalDate').value,
+            cliente: document.getElementById('editModalClient').value,
+            solicitante: document.getElementById('editModalRequester').value,
+            horas: document.getElementById('editModalHours').value,
+            tipo: document.getElementById('editModalType').value,
+            descripcion: document.getElementById('editModalDesc').value,
+            consultor: document.getElementById('editModalConsultant').value,
+            consultorManual: document.getElementById('editModalConsultantManual').value,
+            proyecto: document.getElementById('editModalProject').value
+        };
+        
+        const cambios = JSON.stringify(datosOriginales) !== JSON.stringify(datosActuales);
+        console.log('¿Hay cambios?', cambios);
+        if (cambios) {
+            console.log('Datos actuales:', datosActuales);
+        }
+        return cambios;
+    }
+
     // Manejar envío del formulario de edición modal
     document.getElementById('editModalForm').onsubmit = async function(e) {
         e.preventDefault();
+        
+        // Verificar si hay cambios reales
+        if (!hayChanges()) {
+            console.log('No hay cambios, cancelando envío');
+            showNotification('warning', 'Sin Cambios', 'No realizaste ninguna modificación', 2000);
+            closeEditModal();
+            return;
+        }
+        
         let id = document.getElementById('editModalId').value;
         
         console.log('=== ENVIANDO EDICIÓN ===');
         console.log('ID a enviar (inicial):', id);
         console.log('Tipo de ID:', typeof id);
+        console.log('ID length:', String(id).length);
+        console.log('ID es solo números?', String(id).match(/^\d+$/));
         
         // Si el ID es una combinación encoded, buscar el registro real para obtener su ID
         if (!String(id).match(/^\d+$/) && id.includes('%7C')) {
@@ -1258,6 +1331,9 @@
             }
         }
         
+        console.log('ID FINAL a enviar:', id);
+        console.log('Todos los IDs en timeRecords:', timeRecords.map(r => String(r.id).trim()));
+        
         const consultantValue = document.getElementById('editModalConsultant').value;
         const consultant = consultantValue === 'OTRO' ? document.getElementById('editModalConsultantManual').value : consultantValue;
         
@@ -1275,11 +1351,18 @@
         };
         
         console.log('Payload completo:', payload);
+        console.log('=== ENVIANDO AL SERVIDOR ===');
 
         try {
             const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
             const result = await response.json();
             console.log('Respuesta del servidor:', result);
+            
+            if (!result.success) {
+                console.error('El servidor devolvió error:', result.error);
+                showNotification('error', 'Error', result.error || 'No se pudo actualizar el registro', 4000);
+                return;
+            }
             
             closeEditModal();
             showNotification('success', 'Registro Actualizado', 'Los cambios se han guardado exitosamente', 3000);
@@ -1359,20 +1442,21 @@
     function handleGeneratePDF() {
         try {
             const reportType = document.getElementById('reportType').value;
-            const cli = document.getElementById('fClient').value;
             
             if (!reportType) {
                 showNotification('warning', 'Tipo de Reporte', 'Selecciona un tipo de reporte');
                 return;
             }
             
-            if (!cli) {
-                showNotification('warning', 'Cliente Requerido', 'Debes seleccionar un cliente para generar el reporte');
-                return;
-            }
-            
             if (reportType === 'horas') {
+                const cli = document.getElementById('reportClient').value;
+                if (!cli) {
+                    showNotification('warning', 'Cliente Requerido', 'Debes seleccionar un cliente para generar el reporte');
+                    return;
+                }
                 generatePDFHoras(cli);
+            } else if (reportType === 'proyecto') {
+                generatePDFProyecto();
             }
         } catch(e) {
             console.error("Error en handleGeneratePDF:", e);
@@ -1466,13 +1550,14 @@
             const tableData = data.map(r => [
                 r.fecha.split('-').reverse().join('/'),
                 r.solicitante || '-',
+                r.consultor || '-',
                 r.descripcion || '-',
                 `${r.horas}h`
             ]);
             
             doc.autoTable({
                 startY: 54,
-                head: [['Fecha', 'Solicitante', 'Descripción', 'Horas']],
+                head: [['Fecha', 'Solicitante', 'Consultor', 'Descripción', 'Horas']],
                 body: tableData,
                 theme: 'grid',
                 headStyles: { 
@@ -1485,10 +1570,11 @@
                 bodyStyles: { fontSize: 10 },
                 alternateRowStyles: { fillColor: [245, 245, 245] },
                 columnStyles: {
-                    0: { cellWidth: 30, halign: 'center' },
-                    1: { cellWidth: 40 },
-                    2: { cellWidth: 60 },
-                    3: { cellWidth: 25, halign: 'right', fontStyle: 'bold' }
+                    0: { cellWidth: 25, halign: 'center' },
+                    1: { cellWidth: 28 },
+                    2: { cellWidth: 28 },
+                    3: { cellWidth: 55 },
+                    4: { cellWidth: 20, halign: 'right', fontStyle: 'bold' }
                 },
                 margin: { top: 10, left: 10, right: 10 }
             });
@@ -1517,6 +1603,176 @@
         }
     }
 
+    function generatePDFProyecto() {
+        try {
+            const proyectoId = document.getElementById('reportProyecto').value;
+            
+            if (!proyectoId) {
+                showNotification('warning', 'Proyecto Requerido', 'Debes seleccionar un proyecto para generar el reporte');
+                return;
+            }
+            
+            // Buscar el proyecto
+            const proyecto = proyectos.find(p => String(p.id) === String(proyectoId));
+            if (!proyecto) {
+                showNotification('error', 'Error', 'Proyecto no encontrado');
+                return;
+            }
+            
+            // Obtener todos los registros de este proyecto
+            const registrosProyecto = timeRecords.filter(r => String(r.proyectoId) === String(proyectoId));
+            
+            // Calcular horas consumidas
+            const horasConsumidas = registrosProyecto.reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+            const horasRestantes = (parseFloat(proyecto.horasEstimadas) || 0) - horasConsumidas;
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // ENCABEZADO PRINCIPAL
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(24);
+            doc.setTextColor(227, 6, 19); // Rojo CONE
+            doc.text(`CONE`, 14, 15);
+            
+            // SUBTÍTULO
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            doc.setTextColor(26, 26, 26); // Negro
+            doc.text(`Consultora de Negocios Empresarios S.R.L.`, 14, 24);
+            
+            // LÍNEA SEPARADORA
+            doc.setLineWidth(0.5);
+            doc.setDrawColor(227, 6, 19);
+            doc.line(14, 27, 196, 27);
+            
+            // TÍTULO DEL REPORTE
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.setTextColor(227, 6, 19);
+            doc.text(`REPORTE DE PROYECTO`, 14, 35);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(26, 26, 26);
+            doc.text(`Proyecto: ${proyecto.descripcion || 'Sin descripción'}`, 14, 42);
+            doc.text(`ID Proyecto: ${proyecto.id}`, 14, 48);
+            doc.text(`Cliente: ${proyecto.cliente}`, 14, 54);
+            const now = new Date();
+            const fechaHora = now.toLocaleDateString('es-ES') + ' ' + now.toLocaleTimeString('es-ES');
+            doc.text(`Fecha Reporte: ${fechaHora}`, 14, 60);
+            
+            // TABLA CON INFORMACIÓN DEL PROYECTO
+            const infoData = [
+                ['Fecha de Creación', proyecto.fechaCreacion || '-'],
+                ['Cliente', proyecto.cliente || '-'],
+                ['Horas Estimadas', `${proyecto.horasEstimadas || 0}h`],
+                ['Horas Consumidas', `${horasConsumidas.toFixed(1)}h`],
+                ['Horas Restantes', `${horasRestantes.toFixed(1)}h`],
+                ['Fecha de Entrega', proyecto.fechaEntrega || '-'],
+                ['Estado', proyecto.estado || 'Pendiente']
+            ];
+            
+            doc.autoTable({
+                startY: 65,
+                head: [['Concepto', 'Valor']],
+                body: infoData,
+                theme: 'grid',
+                headStyles: { 
+                    fillColor: [227, 6, 19],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    fontSize: 11,
+                    halign: 'center'
+                },
+                bodyStyles: { fontSize: 10 },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
+                columnStyles: {
+                    0: { cellWidth: 50, fontStyle: 'bold' },
+                    1: { cellWidth: 100, halign: 'left' }
+                },
+                margin: { top: 10, left: 10, right: 10 }
+            });
+            
+            // TABLA DE REGISTROS
+            const tableData = registrosProyecto.map(r => [
+                r.fecha.split('-').reverse().join('/'),
+                r.cliente || '-',
+                r.solicitante || '-',
+                r.consultor || '-',
+                `${r.horas}h`
+            ]);
+            
+            const startYRegistros = doc.lastAutoTable.finalY + 15;
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(12);
+            doc.setTextColor(26, 26, 26);
+            doc.text('Registros de Horas:', 14, startYRegistros);
+            
+            if (tableData.length > 0) {
+                doc.autoTable({
+                    startY: startYRegistros + 5,
+                    head: [['Fecha', 'Cliente', 'Solicitante', 'Consultor', 'Horas']],
+                    body: tableData,
+                    theme: 'grid',
+                    headStyles: { 
+                        fillColor: [227, 6, 19],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold',
+                        fontSize: 10,
+                        halign: 'center'
+                    },
+                    bodyStyles: { fontSize: 9 },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    columnStyles: {
+                        0: { cellWidth: 25, halign: 'center' },
+                        1: { cellWidth: 28 },
+                        2: { cellWidth: 28 },
+                        3: { cellWidth: 28 },
+                        4: { cellWidth: 20, halign: 'right', fontStyle: 'bold' }
+                    },
+                    margin: { top: 10, left: 10, right: 10 }
+                });
+            } else {
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(10);
+                doc.text('No hay registros de horas para este proyecto', 14, startYRegistros + 10);
+            }
+            
+            // GUARDAR
+            const fileName = `Reporte_Proyecto_${proyecto.id}_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+            
+            showNotification('success', 'PDF Descargado', `Reporte del proyecto ${proyecto.descripcion} descargado exitosamente`, 3000);
+        } catch(e) {
+            console.error("Error en generatePDFProyecto:", e);
+            showNotification('error', 'Error al Generar PDF', e.message, 4000);
+        }
+    }
+
+    // Event listener para cambiar tipo de reporte
+    document.getElementById('reportType').addEventListener('change', function() {
+        const reportType = this.value;
+        const selectorCliente = document.getElementById('selectorCliente');
+        const selectorProyecto = document.getElementById('selectorProyecto');
+        
+        if (reportType === 'horas') {
+            selectorCliente.style.display = 'block';
+            selectorProyecto.style.display = 'none';
+            // Llenar selector de clientes
+            const clientes = [...new Set(timeRecords.map(r => r.cliente).filter(Boolean))].sort();
+            document.getElementById('reportClient').innerHTML = '<option value="">Seleccionar cliente...</option>' + 
+                clientes.map(c => `<option value="${c}">${c}</option>`).join('');
+        } else if (reportType === 'proyecto') {
+            selectorCliente.style.display = 'none';
+            selectorProyecto.style.display = 'block';
+            // Llenar selector de proyectos
+            document.getElementById('reportProyecto').innerHTML = '<option value="">Seleccionar proyecto...</option>' + 
+                proyectos.map(p => `<option value="${p.id}">${p.descripcion} - ${p.cliente}</option>`).join('');
+        }
+    });
+    
     // Eventos de filtros
     document.querySelectorAll('#view-list select').forEach(s => s.onchange = renderList);
     document.getElementById('date').valueAsDate = new Date();

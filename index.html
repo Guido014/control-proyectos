@@ -14,10 +14,129 @@
         body { font-family: 'Comfortaa', cursive, sans-serif; background: var(--cone-light-gray); color: var(--cone-black); padding: 25px; font-size: 16px; }
         
         /* LOGIN PERSISTENTE */
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--cone-black); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-card { background: white; padding: 40px; border-radius: 12px; text-align: center; border-top: 5px solid var(--cone-red); width: 320px; }
-        .login-card h2 { font-size: 2.5rem; margin-bottom: 20px; }
-        .login-card input { font-size: 1rem; padding: 12px; }
+        #loginOverlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 9999;
+            overflow: hidden;
+        }
+        
+        /* Animación de fondo */
+        #loginOverlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(227, 6, 19, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(227, 6, 19, 0.05) 0%, transparent 50%);
+            animation: bgMove 15s ease-in-out infinite;
+        }
+        
+        @keyframes bgMove {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-30px, -30px); }
+        }
+        
+        .login-card { 
+            background: white; 
+            padding: 50px 40px; 
+            border-radius: 16px; 
+            text-align: center; 
+            border-top: 5px solid var(--cone-red); 
+            width: 360px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.8s ease-out;
+        }
+        
+        @keyframes slideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-card h2 { 
+            font-size: 2.8rem; 
+            margin-bottom: 8px;
+            color: var(--cone-red);
+            font-weight: 700;
+            letter-spacing: -1px;
+            animation: fadeInDown 0.8s ease-out 0.2s both;
+        }
+        
+        .login-subtitle {
+            font-size: 0.95rem;
+            color: #888;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            animation: fadeInDown 0.8s ease-out 0.3s both;
+        }
+        
+        @keyframes fadeInDown {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-card input { 
+            font-size: 1rem; 
+            padding: 14px; 
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+            border: 2px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+        
+        .login-card input:focus {
+            border-color: var(--cone-red);
+            box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.1);
+        }
+        
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-footer {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: #ccc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+        
+        .login-footer strong {
+            color: var(--cone-red);
+            font-weight: 700;
+        }
         #mainApp { display: none; max-width: 1400px; margin: 0 auto; }
 
         /* HEADER */
@@ -49,8 +168,9 @@
         label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 1rem; outline: none; }
         .manual-input { margin-top: 8px; border-color: var(--cone-red); display: none; }
-        .btn { background: var(--cone-red); color: white; padding: 14px; border: none; border-radius: 6px; font-weight: 700; text-transform: uppercase; cursor: pointer; width: 100%; font-size: 0.95rem; transition: 0.2s; }
-        .btn:hover { background: var(--cone-black); }
+        .btn { background: var(--cone-red); color: white; padding: 14px; border: none; border-radius: 6px; font-weight: 700; text-transform: uppercase; cursor: pointer; width: 100%; font-size: 0.95rem; transition: 0.3s; }
+        .btn:hover { background: var(--cone-black); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(227, 6, 19, 0.3); }
+        .btn:active { transform: translateY(0); }
 
         /* LISTADO */
         .record-item { background: #fff; padding: 14px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--cone-red); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.2s ease; }
@@ -72,7 +192,7 @@
 
         /* CALENDARIO MEJORADO */
         .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 1.1rem; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
         .cal-header { text-align: center; font-weight: 700; font-size: 0.8rem; color: #ccc; text-transform: uppercase; padding: 10px 0; }
         
         .cal-day { 
@@ -89,7 +209,10 @@
             font-size: 0.7rem; background: #f0f0f0; padding: 3px 6px; border-radius: 3px; margin-bottom: 3px; 
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid var(--cone-red); display: block; 
         }
-        .cal-total-hours { position: absolute; bottom: 6px; right: 6px; font-size: 0.85rem; font-weight: 700; color: var(--cone-black); background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 4px; }
+        .cal-total-hours { position: absolute; bottom: 6px; right: 6px; font-size: 0.85rem; font-weight: 700; }
+        .cal-total-hours.high { color: #4CAF50; } /* Verde: 8+ horas */
+        .cal-total-hours.medium { color: #FFC107; } /* Amarillo: 5-7 horas */
+        .cal-total-hours.low { color: #f44336; } /* Rojo: 1-4 horas */
 
         .sync-status { padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; background: #eee; margin-top: 8px; display: none; }
 
@@ -288,9 +411,11 @@
 
 <div id="loginOverlay">
     <div class="login-card">
-        <h2 style="color:var(--cone-red);">CONE</h2>
+        <h2>CONE</h2>
+        <div class="login-subtitle">Control de Proyectos</div>
         <input type="password" id="passInput" placeholder="Contraseña..." onkeypress="if(event.key==='Enter') verifyPass()">
-        <button onclick="verifyPass()" class="btn" style="margin-top:12px;">Entrar</button>
+        <button onclick="verifyPass()" class="btn" style="margin-top:16px;">Entrar</button>
+        <div class="login-footer">by <strong>CONE</strong></div>
     </div>
 </div>
 
@@ -357,6 +482,12 @@
                     <option value="OTRO">➕ OTRO</option>
                 </select>
                 <input type="text" id="editModalConsultantManual" class="manual-input" placeholder="Nombre del consultor...">
+            </div>
+            <div class="form-group">
+                <label>Proyecto (Opcional)</label>
+                <select id="editModalProject">
+                    <option value="">Sin proyecto</option>
+                </select>
             </div>
             <div class="edit-modal-buttons">
                 <button type="submit" class="btn">Guardar Cambios ✔</button>
@@ -749,6 +880,14 @@
 
     // HTML Genérico de fila (usado en Lista y en Modal)
     function generateRecordHTML(r) {
+        // Siempre intentar usar ID real primero
+        let recordId = String(r.id).trim();
+        
+        // Si el ID está vacío o no es válido, usar combinación única
+        if (!recordId || !recordId.match(/^\d+$/)) {
+            recordId = encodeURIComponent(`${r.cliente}|${r.fecha}|${r.solicitante}|${r.horas}|${r.tipo || 'Remoto'}`);
+        }
+        
         return `
             <div class="record-item">
                 <div class="record-info">
@@ -759,15 +898,15 @@
                 <div class="record-side">
                     <span class="record-hours-badge">${r.horas}h</span>
                     <div class="record-actions">
-                        <button onclick="prepareEdit('${r.id}')" class="action-btn edit" title="Editar">✎</button>
-                        <button onclick="deleteRecord('${r.id}')" class="action-btn delete" title="Eliminar">🗑</button>
+                        <button onclick="prepareEditFromRecord('${recordId}')" class="action-btn edit" title="Editar">✎</button>
+                        <button onclick="deleteRecordFromRecord('${recordId}')" class="action-btn delete" title="Eliminar">🗑</button>
                     </div>
                 </div>
             </div>
         `;
     }
 
-    // CALENDARIO
+// CALENDARIO
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = '';
@@ -775,20 +914,19 @@
         const m = currentCalDate.getMonth();
         document.getElementById('calMonthLabel').innerText = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(currentCalDate).toUpperCase();
 
-        ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'].forEach(d => grid.innerHTML += `<div class="cal-header">${d}</div>`);
+        ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].forEach(d => grid.innerHTML += `<div class="cal-header">${d}</div>`);
 
         const first = new Date(y, m, 1).getDay();
         const days = new Date(y, m + 1, 0).getDate();
         let offset = first === 0 ? 6 : first - 1;
 
-        let day = 1;
-        for (let i = 0; i < 42; i++) {
-            if (day > days) break;
-            const dateObj = new Date(y, m, day);
-            const w = dateObj.getDay();
-            if (w === 0 || w === 6) { day++; i--; continue; } // Saltar fines de semana
-            if (i < offset && day === 1) { grid.innerHTML += `<div></div>`; continue; }
+        // Agregar celdas vacías al inicio
+        for (let i = 0; i < offset; i++) {
+            grid.innerHTML += `<div></div>`;
+        }
 
+        // Agregar todos los días del mes
+        for (let day = 1; day <= days; day++) {
             const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             const dayData = timeRecords.filter(r => r.fecha === dStr);
             const totalH = dayData.reduce((acc, r) => acc + (parseFloat(r.horas) || 0), 0);
@@ -799,14 +937,19 @@
 
             const isToday = new Date().toISOString().split('T')[0] === dStr;
             
+            // Obtener clase de color basada en horas totales
+            let hoursClass = '';
+            if (totalH >= 8) hoursClass = 'high';
+            else if (totalH >= 5) hoursClass = 'medium';
+            else if (totalH > 0) hoursClass = 'low';
+            
             // Añadimos el onclick para abrir el modal
             grid.innerHTML += `
             <div class="cal-day ${isToday?'today':''}" onclick="openDayModal('${dStr}')">
                 <span class="cal-num">${day}</span>
                 <div>${chips}</div>
-                ${totalH > 0 ? `<div class="cal-total-hours">${totalH}h</div>` : ''}
+                ${totalH > 0 ? `<div class="cal-total-hours ${hoursClass}">${totalH}h</div>` : ''}
             </div>`;
-            day++;
         }
     }
     function changeMonth(s) { currentCalDate.setMonth(currentCalDate.getMonth() + s); renderCalendar(); }
@@ -955,43 +1098,131 @@
     };
 
     // FUNCIONES DE EDICIÓN Y BORRADO (Compatibles con el Modal)
-    function prepareEdit(id) {
-        closeDayModal(); // Cerramos el modal si está abierto
-        const r = timeRecords.find(x => x.id.toString() === id.toString());
-        if(!r) return;
+    function prepareEditFromRecord(id) {
+        console.log('=== EDICIÓN INICIADA ===');
+        console.log('ID pasado:', id);
         
-        // Llenar modal de edición
-        document.getElementById('editModalId').value = r.id;
-        document.getElementById('editModalId').dataset.projectId = r.proyectoId || "";
-        document.getElementById('editModalDate').value = r.fecha;
-        document.getElementById('editModalClient').value = r.cliente;
-        document.getElementById('editModalRequester').value = r.solicitante;
-        document.getElementById('editModalHours').value = r.horas;
-        document.getElementById('editModalType').value = r.tipo || 'Remoto';
-        document.getElementById('editModalDesc').value = r.descripcion || '';
+        prepareEdit(id);
+    }
+    
+    function deleteRecordFromRecord(id) {
+        console.log('deleteRecordFromRecord called with:', id);
+        deleteRecord(id);
+    }
+
+    function prepareEdit(idInput) {
+        console.log('prepareEdit called with ID:', idInput);
+        console.log('Tipo:', typeof idInput);
         
-        // Cargar consultor
-        const consultantSelect = document.getElementById('editModalConsultant');
-        const consultantManual = document.getElementById('editModalConsultantManual');
+        // Cerrar modal del día
+        closeDayModal();
         
-        consultantManual.style.display = 'none';
-        consultantManual.value = '';
+        // Buscar por ID directo - es lo más seguro
+        let r = null;
+        const searchId = String(idInput).trim();
         
-        if (r.consultor) {
-            if (r.consultor === 'Martín Serati' || r.consultor === 'Guido Chaparro') {
-                consultantSelect.value = r.consultor;
-            } else {
-                // Es un consultor personalizado
-                consultantSelect.value = 'OTRO';
-                consultantManual.value = r.consultor;
-                consultantManual.style.display = 'block';
+        console.log('Buscando registro con ID:', searchId);
+        console.log('Total de registros disponibles:', timeRecords.length);
+        
+        for (let i = 0; i < timeRecords.length; i++) {
+            const recordId = String(timeRecords[i].id).trim();
+            if (recordId === searchId) {
+                r = timeRecords[i];
+                console.log('✓ Registro encontrado en índice:', i);
+                console.log('Registro:', r);
+                break;
             }
-        } else {
-            consultantSelect.value = '';
         }
         
-        // Abrir modal
-        document.getElementById('editModal').classList.add('open');
+        if (!r) {
+            console.error('Registro NO encontrado buscando por ID:', searchId);
+            // Si no encuentra por ID, intenta por la combinación antigua
+            console.log('Intentando buscar por combinación única...');
+            
+            if (!String(searchId).match(/^\d+$/)) {
+                const decodedId = decodeURIComponent(searchId);
+                const [cliente, fecha, solicitante, horas, tipo] = decodedId.split('|');
+                
+                for (let i = 0; i < timeRecords.length; i++) {
+                    const rec = timeRecords[i];
+                    if (rec.cliente === cliente && 
+                        rec.fecha === fecha && 
+                        rec.solicitante === solicitante && 
+                        String(rec.horas) === horas && 
+                        (rec.tipo || 'Remoto') === tipo) {
+                        r = rec;
+                        console.log('✓ Registro encontrado por combinación en índice:', i);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (!r) {
+            console.error('Registro no encontrado:', searchId);
+            showNotification('error', 'Error', 'No se encontró el registro');
+            return;
+        }
+        
+        console.log('=== REGISTRO SELECCIONADO ===');
+        console.log('Cliente:', r.cliente);
+        console.log('Fecha:', r.fecha);
+        console.log('Solicitante:', r.solicitante);
+        console.log('Horas:', r.horas);
+        console.log('Proyecto ID:', r.proyectoId);
+        console.log('ID en sistema:', r.id);
+        
+        // Pequeño delay para permitir que se cierre el modal anterior
+        setTimeout(() => {
+            // Llenar modal de edición
+            document.getElementById('editModalId').value = r.id;  // ID real de Google Sheets
+            document.getElementById('editModalDate').value = r.fecha;
+            document.getElementById('editModalClient').value = r.cliente;
+            document.getElementById('editModalRequester').value = r.solicitante;
+            document.getElementById('editModalHours').value = r.horas;
+            document.getElementById('editModalType').value = r.tipo || 'Remoto';
+            document.getElementById('editModalDesc').value = r.descripcion || '';
+            
+            console.log('ID guardado en modal:', r.id);
+            console.log('Tipo de ID:', typeof r.id);
+            
+            // Cargar consultor
+            const consultantSelect = document.getElementById('editModalConsultant');
+            const consultantManual = document.getElementById('editModalConsultantManual');
+            
+            consultantManual.style.display = 'none';
+            consultantManual.value = '';
+            
+            if (r.consultor) {
+                if (r.consultor === 'Martín Serati' || r.consultor === 'Guido Chaparro') {
+                    consultantSelect.value = r.consultor;
+                } else {
+                    consultantSelect.value = 'OTRO';
+                    consultantManual.value = r.consultor;
+                    consultantManual.style.display = 'block';
+                }
+            } else {
+                consultantSelect.value = '';
+            }
+            
+            // Cargar proyecto
+            const projectSelect = document.getElementById('editModalProject');
+            console.log('Cargando proyectos. Total disponibles:', proyectos.length);
+            console.log('ID del proyecto a buscar:', r.proyectoId);
+            console.log('Tipo del ID del proyecto:', typeof r.proyectoId);
+            
+            projectSelect.innerHTML = '<option value="">Sin proyecto</option>' + 
+                proyectos.map(p => {
+                    const isSelected = r.proyectoId === String(p.id) || String(r.proyectoId) === String(p.id);
+                    console.log(`Comparando proyecto: ${p.id} (${typeof p.id}) === ${r.proyectoId} (${typeof r.proyectoId}) ? ${isSelected}`);
+                    return `<option value="${p.id}" ${isSelected ? 'selected' : ''}>${p.cliente} - ${p.descripcion || 'Sin descripción'}</option>`;
+                }).join('');
+            
+            console.log('Proyecto en modal después de cargar:', projectSelect.value);
+            
+            // Abrir modal
+            document.getElementById('editModal').classList.add('open');
+        }, 50);
     }
     
     function closeEditModal() {
@@ -1001,7 +1232,31 @@
     // Manejar envío del formulario de edición modal
     document.getElementById('editModalForm').onsubmit = async function(e) {
         e.preventDefault();
-        const id = document.getElementById('editModalId').value;
+        let id = document.getElementById('editModalId').value;
+        
+        console.log('=== ENVIANDO EDICIÓN ===');
+        console.log('ID a enviar (inicial):', id);
+        console.log('Tipo de ID:', typeof id);
+        
+        // Si el ID es una combinación encoded, buscar el registro real para obtener su ID
+        if (!String(id).match(/^\d+$/) && id.includes('%7C')) {
+            console.log('ID es una combinación encoded, buscando registro real...');
+            const decodedId = decodeURIComponent(id);
+            const [cliente, fecha, solicitante, horas, tipo] = decodedId.split('|');
+            
+            for (let i = 0; i < timeRecords.length; i++) {
+                const rec = timeRecords[i];
+                if (rec.cliente === cliente && 
+                    rec.fecha === fecha && 
+                    rec.solicitante === solicitante && 
+                    String(rec.horas) === horas && 
+                    (rec.tipo || 'Remoto') === tipo) {
+                    id = rec.id;
+                    console.log('✓ ID real encontrado:', id);
+                    break;
+                }
+            }
+        }
         
         const consultantValue = document.getElementById('editModalConsultant').value;
         const consultant = consultantValue === 'OTRO' ? document.getElementById('editModalConsultantManual').value : consultantValue;
@@ -1016,15 +1271,21 @@
             type: document.getElementById('editModalType').value,
             description: document.getElementById('editModalDesc').value,
             consultor: consultant,
-            proyectoId: document.getElementById('editModalId').dataset.projectId || ""
+            proyectoId: document.getElementById('editModalProject').value || ""
         };
+        
+        console.log('Payload completo:', payload);
 
         try {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await response.json();
+            console.log('Respuesta del servidor:', result);
+            
             closeEditModal();
             showNotification('success', 'Registro Actualizado', 'Los cambios se han guardado exitosamente', 3000);
             await loadData();
         } catch(e) { 
+            console.error('Error en la solicitud:', e);
             showNotification('error', 'Error', 'No se pudo actualizar el registro', 4000);
         }
     };
@@ -1036,8 +1297,36 @@
         document.getElementById('cancelBtn').style.display = "none";
     }
 
-    function deleteRecord(id) {
+    function deleteRecord(idInput) {
         closeDayModal(); // Cerramos el modal
+        
+        let r = null;
+        
+        // Si es un ID numérico, buscar directamente
+        if (String(idInput).match(/^\d+$/)) {
+            r = timeRecords.find(x => String(x.id).trim() === String(idInput).trim());
+        } else {
+            // Es una combinación única, decodificar
+            const decodedId = decodeURIComponent(idInput);
+            const [cliente, fecha, solicitante, horas, tipo] = decodedId.split('|');
+            
+            for (let i = 0; i < timeRecords.length; i++) {
+                const rec = timeRecords[i];
+                if (rec.cliente === cliente && 
+                    rec.fecha === fecha && 
+                    rec.solicitante === solicitante && 
+                    String(rec.horas) === horas && 
+                    (rec.tipo || 'Remoto') === tipo) {
+                    r = rec;
+                    break;
+                }
+            }
+        }
+        
+        if (!r) {
+            showNotification('error', 'Error', 'No se encontró el registro para eliminar');
+            return;
+        }
         
         showNotification('confirm', '⚠️ Eliminar Registro', '¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.', 0, [
             {
@@ -1049,7 +1338,7 @@
                     ss.innerText = "Eliminando...";
                     
                     try {
-                        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "delete", id: id }) });
+                        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "delete", id: r.id }) });
                         await loadData();
                         showNotification('success', 'Registro Eliminado', 'El registro ha sido eliminado correctamente', 3000);
                     } catch(e) { 
@@ -1238,9 +1527,13 @@
     const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
     const todayYear = today.getFullYear().toString();
     
-    // Inicializar rango: desde hoy hasta hoy
+    // Obtener el último día del mes actual
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const lastDayOfMonthStr = String(lastDayOfMonth).padStart(2, '0');
+    
+    // Inicializar rango: desde hoy hasta el último día del mes
     document.getElementById('fDayFrom').value = todayDay;
-    document.getElementById('fDayTo').value = todayDay;
+    document.getElementById('fDayTo').value = lastDayOfMonthStr;
     document.getElementById('fMonthFrom').value = todayMonth;
     document.getElementById('fMonthTo').value = todayMonth;
     document.getElementById('fYear').value = todayYear;

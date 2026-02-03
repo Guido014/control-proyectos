@@ -625,18 +625,10 @@
                         <option value="proyecto">🚀 Horas por Proyecto</option>
                     </select>
                     
-                    <!-- Selector de Cliente para reporte de Horas por Cliente -->
-                    <div id="selectorCliente" style="margin-bottom: 12px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Cliente</label>
-                        <select id="reportClient" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
-                            <option value="">Seleccionar cliente...</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Selector de Proyecto para reporte de Horas por Proyecto -->
+                    <!-- Selector de Proyecto - Solo aparece cuando seleccionas "Horas por Proyecto" -->
                     <div id="selectorProyecto" style="margin-bottom: 12px; display: none;">
                         <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Proyecto</label>
-                        <select id="reportProject" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                        <select id="reportProyecto" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
                             <option value="">Seleccionar proyecto...</option>
                         </select>
                     </div>
@@ -1449,14 +1441,19 @@
             }
             
             if (reportType === 'horas') {
-                const cli = document.getElementById('reportClient').value;
+                const cli = document.getElementById('fClient').value;
                 if (!cli) {
-                    showNotification('warning', 'Cliente Requerido', 'Debes seleccionar un cliente para generar el reporte');
+                    showNotification('warning', 'Cliente Requerido', 'Debes seleccionar un cliente en los filtros para generar el reporte');
                     return;
                 }
                 generatePDFHoras(cli);
             } else if (reportType === 'proyecto') {
-                generatePDFProyecto();
+                const proyectoId = document.getElementById('reportProyecto').value;
+                if (!proyectoId) {
+                    showNotification('warning', 'Proyecto Requerido', 'Debes seleccionar un proyecto para generar el reporte');
+                    return;
+                }
+                generatePDFProyecto(proyectoId);
             }
         } catch(e) {
             console.error("Error en handleGeneratePDF:", e);
@@ -1603,15 +1600,8 @@
         }
     }
 
-    function generatePDFProyecto() {
+    function generatePDFProyecto(proyectoId) {
         try {
-            const proyectoId = document.getElementById('reportProyecto').value;
-            
-            if (!proyectoId) {
-                showNotification('warning', 'Proyecto Requerido', 'Debes seleccionar un proyecto para generar el reporte');
-                return;
-            }
-            
             // Buscar el proyecto
             const proyecto = proyectos.find(p => String(p.id) === String(proyectoId));
             if (!proyecto) {
@@ -1754,22 +1744,17 @@
     // Event listener para cambiar tipo de reporte
     document.getElementById('reportType').addEventListener('change', function() {
         const reportType = this.value;
-        const selectorCliente = document.getElementById('selectorCliente');
         const selectorProyecto = document.getElementById('selectorProyecto');
         
-        if (reportType === 'horas') {
-            selectorCliente.style.display = 'block';
-            selectorProyecto.style.display = 'none';
-            // Llenar selector de clientes
-            const clientes = [...new Set(timeRecords.map(r => r.cliente).filter(Boolean))].sort();
-            document.getElementById('reportClient').innerHTML = '<option value="">Seleccionar cliente...</option>' + 
-                clientes.map(c => `<option value="${c}">${c}</option>`).join('');
-        } else if (reportType === 'proyecto') {
-            selectorCliente.style.display = 'none';
+        if (reportType === 'proyecto') {
+            // Mostrar selector de proyectos
             selectorProyecto.style.display = 'block';
             // Llenar selector de proyectos
             document.getElementById('reportProyecto').innerHTML = '<option value="">Seleccionar proyecto...</option>' + 
                 proyectos.map(p => `<option value="${p.id}">${p.descripcion} - ${p.cliente}</option>`).join('');
+        } else {
+            // Ocultar selector de proyectos para "Horas por Cliente"
+            selectorProyecto.style.display = 'none';
         }
     });
     

@@ -497,6 +497,30 @@
     </div>
 </div>
 
+<!-- MODAL PARA EDITAR SOLICITANTES -->
+<div id="editSolicitanteModal" class="edit-modal-overlay">
+    <div class="edit-modal-content">
+        <div class="edit-modal-header">
+            <div class="edit-modal-title">✏️ Editar Solicitante</div>
+            <button class="edit-modal-close" onclick="closeEditSolicitanteModal()">×</button>
+        </div>
+        <form id="editSolicitanteForm" class="edit-modal-form">
+            <div class="form-group">
+                <label>Nombre Actual</label>
+                <input type="text" id="solicitanteActual" readonly style="background: #f9f9f9;">
+            </div>
+            <div class="form-group">
+                <label>Nuevo Nombre</label>
+                <input type="text" id="solicitanteNuevo" required placeholder="Ingresa el nuevo nombre">
+            </div>
+            <div class="edit-modal-buttons">
+                <button type="submit" class="btn">Actualizar ✔</button>
+                <button type="button" onclick="closeEditSolicitanteModal()" class="btn" style="background: #888;">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="mainApp">
     <div class="header">
         <span class="brand-subtitle">CONSULTORA DE NEGOCIOS EMPRESARIOS</span> 
@@ -557,7 +581,8 @@
                         <select id="projectClient" onchange="handleSelectChange('projectClient', 'projectClientManual')" required></select>
                         <input type="text" id="projectClientManual" class="manual-input" placeholder="Nuevo cliente...">
                     </div>
-                    <div class="form-group"><label>Presupuesto Horas</label><input type="number" id="projectHours" required></div>
+                    <div class="form-group"><label>Horas Remotas Presupuestadas</label><input type="number" id="projectHoursRemote" step="0.5" required></div>
+                    <div class="form-group"><label>Horas Presenciales Presupuestadas</label><input type="number" id="projectHoursOnSite" step="0.5" required></div>
                     <div class="form-group"><label>Fecha Entrega</label><input type="date" id="projectDeadline" required></div>
                     <div class="form-group"><label>Descripción del Proyecto</label><input type="text" id="projectDesc" placeholder="Describe brevemente el proyecto..."></div>
                     <button type="submit" id="projBtn" class="btn" style="background:var(--cone-black)">Crear Proyecto 🚀</button>
@@ -752,6 +777,10 @@
 
     // CARGA DE DATOS
     let proyectos = [];
+    const proyectosEspeciales = {
+        'ABONADOS': { id: 'ABONADOS', descripcion: 'Horas Abonadas', cliente: '', tipo: 'abonado' },
+        'AVM': { id: 'AVM', descripcion: 'AMV', cliente: '', tipo: 'avm' }
+    };
 
     async function loadData() {
         const ss = document.getElementById('syncStatus');
@@ -762,18 +791,30 @@
         rBtn.classList.add('spinning');
 
         try {
+            console.log('Intentando conectar a:', SCRIPT_URL);
             const res = await fetch(SCRIPT_URL);
+            console.log('Respuesta recibida. Status:', res.status);
+            
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            
             const data = await res.json();
+            console.log('Datos recibidos:', data);
             
             // Manejar nuevo formato con horas y proyectos
             if (data.horas && data.proyectos !== undefined) {
                 timeRecords = data.horas;
                 proyectos = data.proyectos;
+                console.log('Formato nuevo detectado. Horas:', timeRecords.length, 'Proyectos:', proyectos.length);
                 populateProjectSelector();
-            } else {
+            } else if (Array.isArray(data)) {
                 // Formato antiguo (solo horas)
                 timeRecords = data;
                 proyectos = [];
+                console.log('Formato antiguo detectado. Horas:', timeRecords.length);
+            } else {
+                throw new Error('Formato de datos no reconocido');
             }
             
             populateFilters();
@@ -781,8 +822,9 @@
             renderCalendar();
             ss.style.display = 'none';
         } catch(e) { 
-            ss.innerText = "Error de conexión"; 
-            console.error(e);
+            console.error('Error completo:', e);
+            ss.innerText = `Error: ${e.message}`; 
+            showNotification('error', 'Error de Conexión', `No se pudieron cargar los datos: ${e.message}`, 5000);
         }
         
         rBtn.classList.remove('spinning');
@@ -790,8 +832,16 @@
 
     function populateProjectSelector() {
         const projectSelect = document.getElementById('project');
+        const proyectosConEspeciales = [
+            ...Object.values(proyectosEspeciales),
+            ...proyectos
+        ];
         const options = '<option value="">Sin proyecto</option>' + 
-            proyectos.map(p => `<option value="${p.id}" data-cliente="${p.cliente}" data-descripcion="${p.descripcion || ''}">${p.cliente} - ${p.descripcion || 'Sin descripción'}</option>`).join('');
+            proyectosConEspeciales.map(p => {
+                // Si el cliente está vacío (proyectos especiales), solo mostrar descripción
+                const label = p.cliente ? `${p.cliente} - ${p.descripcion || 'Sin descripción'}` : p.descripcion;
+                return `<option value="${p.id}" data-cliente="${p.cliente}" data-descripcion="${p.descripcion || ''}">${label}</option>`;
+            }).join('');
         projectSelect.innerHTML = options;
     }
 
@@ -888,7 +938,7 @@
         document.getElementById('recordsList').innerHTML = filtered.map(r => generateRecordHTML(r)).join('') || '<p style="text-align:center; padding:30px; opacity:0.5; font-size:1.1rem;">Sin datos</p>';
     }
 
-    // HTML Genérico de fila (usado en Lista y en Modal)
+    // HTML Genérico de fila (usado en Lista y en Modal) - CON EDICIÓN INLINE
     function generateRecordHTML(r) {
         // Siempre intentar usar ID real primero
         let recordId = String(r.id).trim();
@@ -902,7 +952,11 @@
             <div class="record-item">
                 <div class="record-info">
                     <div class="record-client-name">${r.cliente}</div>
-                    <div class="record-meta">📅 ${r.fecha.split('-').reverse().join('/')} | 👤 ${r.solicitante} | 👨‍💼 ${r.consultor || '-'}</div>
+                    <div class="record-meta">
+                        📅 ${r.fecha.split('-').reverse().join('/')} | 
+                        👤 <span class="editable-solicitante" data-original="${r.solicitante}" data-record-id="${recordId}" onclick="activateInlineEdit(this)" style="cursor: pointer; padding: 2px 6px; border-radius: 3px; transition: 0.2s;">${r.solicitante}</span> | 
+                        👨‍💼 <span class="editable-consultor" data-original="${r.consultor || '-'}" data-record-id="${recordId}" onclick="activateInlineEdit(this)" style="cursor: pointer; padding: 2px 6px; border-radius: 3px; transition: 0.2s;">${r.consultor || '-'}</span>
+                    </div>
                     <div class="record-desc">📝 ${r.descripcion || ''}</div>
                 </div>
                 <div class="record-side">
@@ -915,8 +969,160 @@
             </div>
         `;
     }
+    
+    // EDICIÓN INLINE
+    function activateInlineEdit(element) {
+        // Si ya está en modo edición, ignorar
+        if (element.classList.contains('editing')) return;
+        
+        const fieldType = element.classList.contains('editable-solicitante') ? 'solicitante' : 'consultor';
+        const originalValue = element.getAttribute('data-original');
+        
+        // Crear input editable
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = originalValue;
+        input.className = 'inline-edit-input';
+        input.style.cssText = `
+            padding: 4px 8px;
+            border: 2px solid var(--cone-red);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: #fff;
+        `;
+        
+        // Reemplazar el span con el input
+        const parent = element.parentNode;
+        const placeholder = element;
+        element.classList.add('editing');
+        element.style.display = 'none';
+        parent.insertBefore(input, element.nextSibling);
+        
+        input.focus();
+        input.select();
+        
+        // Función para guardar cambios
+        const saveEdit = async () => {
+            const newValue = input.value.trim();
+            
+            if (!newValue) {
+                showNotification('warning', 'Campo Vacío', 'No puedes dejar el campo vacío');
+                input.focus();
+                return;
+            }
+            
+            if (newValue === originalValue) {
+                // Sin cambios, volver al original
+                input.remove();
+                placeholder.classList.remove('editing');
+                placeholder.style.display = 'inline';
+                return;
+            }
+            
+            // Ejecutar bulk update
+            input.disabled = true;
+            input.style.opacity = '0.5';
+            await performBulkUpdate(fieldType, originalValue, newValue, placeholder, input, parent);
+        };
+        
+        // Guardar con Enter
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') saveEdit();
+            if (e.key === 'Escape') {
+                input.remove();
+                placeholder.classList.remove('editing');
+                placeholder.style.display = 'inline';
+            }
+        });
+        
+        // Guardar al perder el foco
+        input.addEventListener('blur', saveEdit);
+    }
+    
+    async function performBulkUpdate(fieldType, oldValue, newValue, placeholder, input, parent) {
+        // Mostrar confirmación
+        return new Promise((resolve) => {
+            showNotification('confirm', '🔄 Actualizar en Todos los Registros', 
+                `¿Actualizar todos los registros donde ${fieldType === 'solicitante' ? 'Solicitante' : 'Consultor'} = "${oldValue}" a "${newValue}"?`, 
+                0, 
+                [
+                    {
+                        text: 'Confirmar',
+                        class: 'confirm',
+                        callback: async () => {
+                            await executeBulkUpdate(fieldType, oldValue, newValue);
+                            input.remove();
+                            placeholder.classList.remove('editing');
+                            placeholder.style.display = 'inline';
+                            resolve();
+                        }
+                    },
+                    {
+                        text: 'Cancelar',
+                        class: 'cancel',
+                        callback: () => {
+                            input.remove();
+                            placeholder.classList.remove('editing');
+                            placeholder.style.display = 'inline';
+                            resolve();
+                        }
+                    }
+                ]
+            );
+        });
+    }
+    
+    async function executeBulkUpdate(fieldType, oldValue, newValue) {
+        console.log(`=== BULK UPDATE ===`);
+        console.log(`Campo: ${fieldType}`);
+        console.log(`Valor anterior: ${oldValue}`);
+        console.log(`Valor nuevo: ${newValue}`);
+        
+        // Contar cuántos registros se van a actualizar
+        const recordsToUpdate = timeRecords.filter(r => {
+            if (fieldType === 'solicitante') return r.solicitante === oldValue;
+            if (fieldType === 'consultor') return (r.consultor || '-') === oldValue;
+            return false;
+        });
+        
+        console.log(`Registros a actualizar: ${recordsToUpdate.length}`);
+        
+        if (recordsToUpdate.length === 0) {
+            showNotification('warning', 'Sin Coincidencias', `No hay registros con ${fieldType} = "${oldValue}"`);
+            return;
+        }
+        
+        // Actualizar en memoria
+        timeRecords = timeRecords.map(r => {
+            if (fieldType === 'solicitante' && r.solicitante === oldValue) {
+                return {...r, solicitante: newValue};
+            }
+            if (fieldType === 'consultor' && (r.consultor || '-') === oldValue) {
+                return {...r, consultor: newValue === '-' ? '' : newValue};
+            }
+            return r;
+        });
+        
+        // Aquí irían las llamadas al servidor para persistir los cambios
+        // Por ahora, solo actualizamos localmente y en la UI
+        
+        showNotification('success', '✅ Actualización Completa', 
+            `${recordsToUpdate.length} registro(s) actualizado(s) correctamente`, 3000);
+        
+        // Actualizar la UI
+        renderList();
+        populateFilters();
+        renderCalendar();
+    }
 
-// CALENDARIO
+    // TIPOS DE PROYECTOS ESPECIALES (No facturables)
+    const PROYECTO_TYPES = {
+        ABONADOS: 'Abonados',
+        AVM: 'AVM (A Mes Vencido)',
+        NORMAL: 'Normal'  // Proyectos normales que sí facturan
+    };
+    
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = '';
@@ -939,7 +1145,15 @@
         for (let day = 1; day <= days; day++) {
             const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             const dayData = timeRecords.filter(r => r.fecha === dStr);
-            const totalH = dayData.reduce((acc, r) => acc + (parseFloat(r.horas) || 0), 0);
+            
+            // Calcular horas FACTURABLES (sin Abonados ni AVM)
+            const horasFacturables = getHorasFacturables(dayData);
+            
+            // Calcular horas ABONADAS (Abonados + AVM)
+            const horasAbonadas = getHorasAbonadas(dayData);
+            
+            // Calcular TODAS las horas (facturables + abonadas)
+            const horasTotales = getHorasTotales(dayData);
             
             // AQUI ESTA EL LIMITE DE 3 CLIENTES
             let chips = dayData.slice(0, 3).map(r => `<div class="cal-chip">${r.cliente}</div>`).join('');
@@ -947,23 +1161,63 @@
 
             const isToday = new Date().toISOString().split('T')[0] === dStr;
             
-            // Obtener clase de color basada en horas totales
-            let hoursClass = '';
-            if (totalH >= 8) hoursClass = 'high';
-            else if (totalH >= 5) hoursClass = 'medium';
-            else if (totalH > 0) hoursClass = 'low';
+            // SEMÁFORO: Basado SOLO en horas facturables
+            const hoursClass = getHoursClass(horasFacturables);
             
-            // Añadimos el onclick para abrir el modal
+            // Mostrar TODAS las horas (facturables + abonadas)
+            const displayHoras = horasTotales > 0 ? `${horasTotales}h` : '';
+            
+            // Marcar si hay horas abonadas
+            const hasAbonadas = horasAbonadas > 0;
+            const abonadaNote = hasAbonadas ? 
+                `<div style="font-size: 8px; color: #2196F3; margin-top: 2px; font-style: italic;">📌 ${horasAbonadas}h abon.</div>` : '';
+            
             grid.innerHTML += `
             <div class="cal-day ${isToday?'today':''}" onclick="openDayModal('${dStr}')">
                 <span class="cal-num">${day}</span>
                 <div>${chips}</div>
-                ${totalH > 0 ? `<div class="cal-total-hours ${hoursClass}">${totalH}h</div>` : ''}
+                ${displayHoras ? `<div class="cal-total-hours ${hoursClass}">${displayHoras}</div>` : ''}
+                ${abonadaNote}
             </div>`;
         }
     }
     function changeMonth(s) { currentCalDate.setMonth(currentCalDate.getMonth() + s); renderCalendar(); }
 
+    // ===== LÓGICA DE SEPARACIÓN DE HORAS =====
+    // Determinar si un registro es de un proyecto especial (no facturable)
+    function esProyectoEspecial(proyectoId) {
+        if (!proyectoId) return false;
+        const idStr = String(proyectoId).toUpperCase();
+        return idStr === 'ABONADOS' || idStr === 'AVM';
+    }
+
+    // Calcular horas FACTURABLES (sin Abonados ni AVM)
+    function getHorasFacturables(dayData) {
+        return dayData
+            .filter(r => !esProyectoEspecial(r.proyectoId))
+            .reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+    }
+
+    // Calcular horas ABONADAS (Abonados + AVM)
+    function getHorasAbonadas(dayData) {
+        return dayData
+            .filter(r => esProyectoEspecial(r.proyectoId))
+            .reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+    }
+
+    // Calcular TODAS las horas
+    function getHorasTotales(dayData) {
+        return dayData.reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+    }
+
+    // Obtener clase de color SOLO basada en horas facturables
+    function getHoursClass(horasFacturables) {
+        if (horasFacturables >= 8) return 'high';      // Verde: 8+ horas facturables
+        else if (horasFacturables >= 5) return 'medium'; // Amarillo: 5-7 horas facturables
+        else if (horasFacturables > 0) return 'low';     // Rojo: 1-4 horas facturables
+        return '';
+    }
+    
     // GESTIÓN DEL MODAL DEL DÍA
     function openDayModal(dateStr) {
         const overlay = document.getElementById('dayModal');
@@ -1091,7 +1345,8 @@
         const payload = {
             action: "save_project",
             client: document.getElementById('projectClient').value === 'OTRO' ? document.getElementById('projectClientManual').value.toUpperCase() : document.getElementById('projectClient').value,
-            hours: document.getElementById('projectHours').value,
+            hoursRemote: document.getElementById('projectHoursRemote').value,
+            hoursOnSite: document.getElementById('projectHoursOnSite').value,
             deliveryDate: document.getElementById('projectDeadline').value,
             description: document.getElementById('projectDesc').value
         };
@@ -1243,6 +1498,73 @@
     function closeEditModal() {
         document.getElementById('editModal').classList.remove('open');
     }
+    
+    function closeEditSolicitanteModal() {
+        document.getElementById('editSolicitanteModal').classList.remove('open');
+    }
+    
+    function abrirEditarSolicitante(solicitanteActual) {
+        abrirEditarSolicitanteDesdeDropdown(solicitanteActual);
+    }
+    
+    function mostrarSolicitantesParaEditar() {
+        const solicitantes = [...new Set(timeRecords.map(r => r.solicitante).filter(Boolean))].sort();
+        
+        if (solicitantes.length === 0) {
+            showNotification('info', 'Sin Solicitantes', 'No hay solicitantes registrados');
+            return;
+        }
+        
+        const opciones = solicitantes.map(s => `<button onclick="abrirEditarSolicitanteDesdeDropdown('${s}')" style="display: block; width: 100%; text-align: left; padding: 10px; margin: 5px 0; background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 0.95rem;">✏️ ${s}</button>`).join('');
+        
+        showNotification('info', 'Selecciona un Solicitante para Editar', opciones, 0);
+    }
+    
+    function abrirEditarSolicitanteDesdeDropdown(solicitanteActual) {
+        document.getElementById('solicitanteActual').value = solicitanteActual;
+        document.getElementById('solicitanteNuevo').value = '';
+        document.getElementById('editSolicitanteModal').classList.add('open');
+    }
+    
+    function abrirEditarSolicitanteDesdeModal() {
+        const solicitanteActual = document.getElementById('editModalRequester').value;
+        if (!solicitanteActual.trim()) {
+            showNotification('warning', 'Campo Requerido', 'Primero selecciona un solicitante');
+            return;
+        }
+        abrirEditarSolicitanteDesdeDropdown(solicitanteActual);
+    }
+    
+    // Manejar envío del formulario de editar solicitante
+    document.getElementById('editSolicitanteForm').onsubmit = async function(e) {
+        e.preventDefault();
+        
+        const solicitanteActual = document.getElementById('solicitanteActual').value;
+        const solicitanteNuevo = document.getElementById('solicitanteNuevo').value;
+        
+        if (!solicitanteNuevo.trim()) {
+            showNotification('warning', 'Campo Requerido', 'Ingresa el nuevo nombre del solicitante');
+            return;
+        }
+        
+        // Actualizar todos los registros con el solicitante antiguo
+        const registrosActualizados = timeRecords.map(r => {
+            if (r.solicitante === solicitanteActual) {
+                return {...r, solicitante: solicitanteNuevo};
+            }
+            return r;
+        });
+        
+        // Aquí iría la lógica para guardar en el servidor si es necesario
+        // Por ahora, solo actualizamos localmente
+        timeRecords = registrosActualizados;
+        
+        showNotification('success', 'Solicitante Actualizado', `Todos los registros con "${solicitanteActual}" ahora dicen "${solicitanteNuevo}"`, 3000);
+        
+        closeEditSolicitanteModal();
+        renderList();
+        populateFilters();
+    };
     
     // Guardar datos originales cuando se abre el modal de edición
     let datosOriginales = {};
@@ -1612,9 +1934,17 @@
             // Obtener todos los registros de este proyecto
             const registrosProyecto = timeRecords.filter(r => String(r.proyectoId) === String(proyectoId));
             
-            // Calcular horas consumidas
-            const horasConsumidas = registrosProyecto.reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
-            const horasRestantes = (parseFloat(proyecto.horasEstimadas) || 0) - horasConsumidas;
+            // Calcular horas consumidas por tipo
+            const horasRemotasConsumidas = registrosProyecto
+                .filter(r => r.tipo === 'Remoto')
+                .reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+            
+            const horasPresencialesConsumidas = registrosProyecto
+                .filter(r => r.tipo === 'Presencial')
+                .reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+            
+            const horasRemotasRestantes = (parseFloat(proyecto.horasRemotasPresupuestadas) || 0) - horasRemotasConsumidas;
+            const horasPresencialesRestantes = (parseFloat(proyecto.horasPresencialesPresupuestadas) || 0) - horasPresencialesConsumidas;
             
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
@@ -1656,9 +1986,8 @@
             const infoData = [
                 ['Fecha de Creación', proyecto.fechaCreacion || '-'],
                 ['Cliente', proyecto.cliente || '-'],
-                ['Horas Estimadas', `${proyecto.horasEstimadas || 0}h`],
-                ['Horas Consumidas', `${horasConsumidas.toFixed(1)}h`],
-                ['Horas Restantes', `${horasRestantes.toFixed(1)}h`],
+                ['Horas Remotas Presupuestadas', `${proyecto.horasRemotasPresupuestadas || 0}h`],
+                ['Horas Presenciales Presupuestadas', `${proyecto.horasPresencialesPresupuestadas || 0}h`],
                 ['Fecha de Entrega', proyecto.fechaEntrega || '-'],
                 ['Estado', proyecto.estado || 'Pendiente']
             ];
@@ -1684,12 +2013,12 @@
                 margin: { top: 10, left: 10, right: 10 }
             });
             
-            // TABLA DE REGISTROS
+            // TABLA DE REGISTROS (CON TIPO)
             const tableData = registrosProyecto.map(r => [
                 r.fecha.split('-').reverse().join('/'),
-                r.cliente || '-',
                 r.solicitante || '-',
                 r.consultor || '-',
+                r.tipo || 'Remoto',
                 `${r.horas}h`
             ]);
             
@@ -1703,7 +2032,7 @@
             if (tableData.length > 0) {
                 doc.autoTable({
                     startY: startYRegistros + 5,
-                    head: [['Fecha', 'Cliente', 'Solicitante', 'Consultor', 'Horas']],
+                    head: [['Fecha', 'Solicitante', 'Consultor', 'Tipo', 'Horas']],
                     body: tableData,
                     theme: 'grid',
                     headStyles: { 
@@ -1716,14 +2045,29 @@
                     bodyStyles: { fontSize: 9 },
                     alternateRowStyles: { fillColor: [245, 245, 245] },
                     columnStyles: {
-                        0: { cellWidth: 25, halign: 'center' },
-                        1: { cellWidth: 28 },
-                        2: { cellWidth: 28 },
-                        3: { cellWidth: 28 },
-                        4: { cellWidth: 20, halign: 'right', fontStyle: 'bold' }
+                        0: { cellWidth: 20, halign: 'center' },
+                        1: { cellWidth: 35 },
+                        2: { cellWidth: 35 },
+                        3: { cellWidth: 20, halign: 'center' },
+                        4: { cellWidth: 15, halign: 'right', fontStyle: 'bold' }
                     },
                     margin: { top: 10, left: 10, right: 10 }
                 });
+                
+                // TOTAL FINAL CON HORAS RESTANTES
+                const finalYRegistros = doc.lastAutoTable.finalY + 10;
+                const horasConsumidasTotales = horasRemotasConsumidas + horasPresencialesConsumidas;
+                
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(11);
+                doc.setTextColor(227, 6, 19);
+                doc.text(`TOTAL DE HORAS CONSUMIDAS: ${horasConsumidasTotales.toFixed(1)}h`, 14, finalYRegistros);
+                
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(10);
+                doc.setTextColor(26, 26, 26);
+                doc.text(`Horas Remotas Restantes: ${horasRemotasRestantes.toFixed(1)}h`, 14, finalYRegistros + 8);
+                doc.text(`Horas Presenciales Restantes: ${horasPresencialesRestantes.toFixed(1)}h`, 14, finalYRegistros + 15);
             } else {
                 doc.setFont("helvetica", "normal");
                 doc.setFontSize(10);

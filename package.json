@@ -1,0 +1,24 @@
+{
+  "name": "cone-control-proyectos",
+  "version": "2.0.0",
+  "description": "Sistema de control de proyectos, tareas y registro de horas para CONE",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 8080 -c-1",
+    "dev": "http-server -p 8080 -c-1",
+    "build": "echo 'Build script placeholder'"
+  },
+  "keywords": [
+    "proyectos",
+    "tareas",
+    "horas",
+    "control",
+    "cone"
+  ],
+  "author": "CONE",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

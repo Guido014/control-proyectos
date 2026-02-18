@@ -1,0 +1,3406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONE | Control de Proyectos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* TEMAS */
+        :root {
+            --cone-red: #E30613;
+            --cone-black: #1A1A1A;
+            --cone-light-gray: #F4F4F4;
+            --cone-white: #FFFFFF;
+        }
+        
+        /* TEMA BLANCO (por defecto) */
+        body.theme-light {
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F4F4F4;
+            --text-primary: #1A1A1A;
+            --text-secondary: #666666;
+            --border-color: #DDDDDD;
+            --card-shadow: rgba(0, 0, 0, 0.03);
+        }
+        
+        /* TEMA INTERMEDIO */
+        body.theme-medium {
+            --bg-primary: #2A2A2A;
+            --bg-secondary: #3A3A3A;
+            --text-primary: #E0E0E0;
+            --text-secondary: #B0B0B0;
+            --border-color: #555555;
+            --card-shadow: rgba(0, 0, 0, 0.3);
+        }
+        
+        /* TEMA OSCURO */
+        body.theme-dark {
+            --bg-primary: #121212;
+            --bg-secondary: #1E1E1E;
+            --text-primary: #FFFFFF;
+            --text-secondary: #A0A0A0;
+            --border-color: #333333;
+            --card-shadow: rgba(0, 0, 0, 0.5);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Comfortaa', cursive, sans-serif; 
+            background: var(--bg-primary); 
+            color: var(--text-primary); 
+            padding: 25px; 
+            font-size: 16px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* LOGIN PERSISTENTE */
+        #loginOverlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 9999;
+            overflow: hidden;
+        }
+        
+        /* Animación de fondo */
+        #loginOverlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(227, 6, 19, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(227, 6, 19, 0.05) 0%, transparent 50%);
+            animation: bgMove 15s ease-in-out infinite;
+        }
+        
+        @keyframes bgMove {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-30px, -30px); }
+        }
+        
+        .login-card { 
+            background: white; 
+            padding: 50px 40px; 
+            border-radius: 16px; 
+            text-align: center; 
+            border-top: 5px solid var(--cone-red); 
+            width: 360px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.8s ease-out;
+        }
+        
+        @keyframes slideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-card h2 { 
+            font-size: 2.8rem; 
+            margin-bottom: 8px;
+            color: var(--cone-red);
+            font-weight: 700;
+            letter-spacing: -1px;
+            animation: fadeInDown 0.8s ease-out 0.2s both;
+        }
+        
+        .login-subtitle {
+            font-size: 0.95rem;
+            color: #888;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            animation: fadeInDown 0.8s ease-out 0.3s both;
+        }
+        
+        @keyframes fadeInDown {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-card input { 
+            font-size: 1rem; 
+            padding: 14px; 
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+            border: 2px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+        
+        .login-card input:focus {
+            border-color: var(--cone-red);
+            box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.1);
+        }
+        
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-footer {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: #ccc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+        
+        .login-footer strong {
+            color: var(--cone-red);
+            font-weight: 700;
+        }
+        #mainApp { display: none; max-width: 1400px; margin: 0 auto; }
+
+        /* HEADER */
+        .header { background: var(--bg-primary); padding: 25px; border-radius: 12px; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; position: relative; border-bottom: 4px solid var(--cone-red); box-shadow: 0 4px 10px var(--card-shadow); }
+        .brand-subtitle { color: var(--cone-red); font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .header h1 { font-size: 1.8rem; margin: 8px 0; color: var(--text-primary); }
+        
+        /* BOTÓN DE TEMA */
+        .theme-toggle { 
+            position: absolute; 
+            right: 20px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            display: flex; 
+            gap: 8px; 
+            background: var(--bg-secondary);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .theme-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+        
+        .theme-btn.active {
+            background: var(--cone-red);
+            color: white;
+            border-color: var(--cone-red);
+        }
+        
+        .theme-btn:hover {
+            color: var(--text-primary);
+        }
+        
+        /* ANIMACIÓN DE REFRESCO */
+        .refresh-btn { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.8rem; opacity: 0.6; transition: color 0.3s; color: var(--text-primary); }
+        .refresh-btn:hover { color: var(--cone-red); opacity: 1; }
+        .refresh-btn.spinning { animation: spin 1s infinite linear; color: var(--cone-red); opacity: 1; }
+        @keyframes spin { 
+            0% { transform: translateY(-50%) rotate(0deg); } 
+            100% { transform: translateY(-50%) rotate(360deg); } 
+        }
+
+        /* TABS */
+        .tabs-header { display: flex; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); }
+        .tab-btn { flex: 1; padding: 12px; background: none; border: none; font-family: inherit; font-weight: 700; cursor: pointer; color: var(--text-secondary); border-bottom: 3px solid transparent; font-size: 0.9rem; text-transform: uppercase; transition: 0.2s; }
+        .tab-btn.active { color: var(--cone-red); border-bottom: 3px solid var(--cone-red); }
+        .tab-btn:hover { color: var(--text-primary); }
+
+        /* LAYOUT */
+        .main-content { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+        .card { background: var(--bg-primary); padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px var(--card-shadow); height: fit-content; border: 1px solid var(--border-color); transition: all 0.3s ease; }
+        
+        /* FORMULARIOS */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; }
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px; 
+            font-family: inherit; 
+            font-size: 1rem; 
+            outline: none; 
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        input:focus, select:focus {
+            border-color: var(--cone-red);
+            box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.2);
+        }
+        .manual-input { margin-top: 8px; border-color: var(--cone-red); display: none; }
+        .btn { background: var(--cone-red); color: white; padding: 14px; border: none; border-radius: 6px; font-weight: 700; text-transform: uppercase; cursor: pointer; width: 100%; font-size: 0.95rem; transition: 0.3s; }
+        .btn:hover { background: var(--cone-black); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(227, 6, 19, 0.3); }
+        .btn:active { transform: translateY(0); }
+
+        /* LISTADO */
+        .record-item { background: var(--bg-secondary); padding: 14px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--cone-red); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px var(--card-shadow); transition: all 0.2s ease; }
+        .record-item:hover { box-shadow: 0 4px 12px var(--card-shadow); transform: translateY(-2px); }
+        .record-info { flex: 1; }
+        .record-client-name { font-weight: 700; font-size: 1.05rem; color: var(--text-primary); }
+        .record-meta { font-size: 0.85rem; color: var(--text-secondary); }
+        .record-desc { font-size: 0.9rem; color: var(--text-secondary); margin-top: 5px; border-top: 1px solid var(--border-color); padding-top: 5px; }
+        .record-side { text-align: right; min-width: 80px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .record-hours-badge { background: var(--cone-black); color: white; padding: 4px 12px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; }
+        
+        /* BOTONES DE ACCIÓN */
+        .record-actions { display: flex; gap: 10px; }
+        .action-btn { background: none; border: none; cursor: pointer; font-size: 1.3rem; transition: all 0.2s ease; padding: 6px 10px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; }
+        .action-btn.edit { color: #4CAF50; }
+        .action-btn.edit:hover { background: rgba(76, 175, 80, 0.15); transform: scale(1.2) rotate(-5deg); color: #2E7D32; }
+        .action-btn.delete { color: #f44336; }
+        .action-btn.delete:hover { background: rgba(244, 67, 54, 0.15); transform: scale(1.2) rotate(5deg); color: #c62828; }
+
+        /* CALENDARIO MEJORADO */
+        .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 1.1rem; color: var(--text-primary); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .cal-header { text-align: center; font-weight: 700; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; padding: 10px 0; }
+        
+        .cal-day { 
+            background: var(--bg-secondary); 
+            border: 1px solid var(--border-color); 
+            min-height: 130px; 
+            border-radius: 8px; 
+            padding: 8px; 
+            position: relative; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            overflow: hidden;
+        }
+        .cal-day:hover { 
+            transform: scale(1.05); 
+            z-index: 10; 
+            border-color: var(--cone-red); 
+            box-shadow: 0 5px 15px var(--card-shadow); 
+        }
+        .cal-day.today { border: 2px solid var(--cone-red); }
+        .cal-num { font-weight: 700; font-size: 1rem; color: var(--text-secondary); margin-bottom: 3px; display: block;}
+        
+        .cal-chip { 
+            font-size: 0.7rem; 
+            background: var(--bg-primary); 
+            color: var(--text-primary);
+            padding: 3px 6px; 
+            border-radius: 3px; 
+            margin-bottom: 3px; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            border-left: 3px solid var(--cone-red); 
+            display: block; 
+        }
+        .cal-total-hours { position: absolute; bottom: 6px; right: 6px; font-size: 0.85rem; font-weight: 700; }
+        .cal-total-hours.high { color: #4CAF50; } /* Verde: 8+ horas */
+        .cal-total-hours.medium { color: #FFC107; } /* Amarillo: 5-7 horas */
+        .cal-total-hours.low { color: #f44336; } /* Rojo: 1-4 horas */
+
+        .sync-status { padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; background: var(--bg-secondary); color: var(--text-primary); margin-top: 8px; display: none; }
+
+        /* NOTIFICACIONES PERSONALIZADAS */
+        .notification { 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: var(--bg-primary); 
+            color: var(--text-primary);
+            padding: 30px 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 40px var(--card-shadow); 
+            z-index: 11000; 
+            text-align: center; 
+            min-width: 300px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            animation: slideInNotif 0.3s ease-out;
+        }
+        
+        .notification.show { display: flex; }
+        
+        .notification.warning { border-top: 5px solid #ff9800; }
+        .notification.warning .notif-icon { color: #ff9800; font-size: 2.5rem; }
+        
+        .notification.error { border-top: 5px solid #f44336; }
+        .notification.error .notif-icon { color: #f44336; font-size: 2.5rem; }
+        
+        .notification.success { border-top: 5px solid #4CAF50; }
+        .notification.success .notif-icon { color: #4CAF50; font-size: 2.5rem; }
+        
+        .notification.confirm { border-top: 5px solid #2196F3; }
+        .notification.confirm .notif-icon { color: #2196F3; font-size: 2.5rem; }
+        
+        .notif-title { 
+            font-size: 1.2rem; 
+            font-weight: 700; 
+            color: #1a1a1a; 
+        }
+        
+        .notif-message { 
+            font-size: 0.95rem; 
+            color: #666; 
+            line-height: 1.5;
+        }
+        
+        .notif-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        .notif-btn {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+        
+        .notif-btn.confirm { background: #4CAF50; color: white; }
+        .notif-btn.confirm:hover { background: #2E7D32; }
+        
+        .notif-btn.cancel { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
+        .notif-btn.cancel:hover { background: #eee; }
+        
+        @keyframes slideInNotif {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+        
+        @keyframes slideOutNotif {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -40%);
+            }
+        }
+        
+        .notification.hide { animation: slideOutNotif 0.3s ease-out forwards; }
+
+        /* MODAL DE EDICIÓN */
+        .edit-modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 10500; 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            opacity: 0; 
+            transition: opacity 0.3s;
+        }
+        
+        .edit-modal-overlay.open { 
+            display: flex; 
+            opacity: 1; 
+        }
+        
+        .edit-modal-content { 
+            background: white; 
+            width: 90%; 
+            max-width: 500px; 
+            border-radius: 12px; 
+            padding: 30px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3); 
+            border-top: 6px solid var(--cone-red);
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideInModal 0.3s ease-out;
+        }
+        
+        .edit-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .edit-modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--cone-red);
+        }
+        
+        .edit-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #aaa;
+            transition: 0.2s;
+        }
+        
+        .edit-modal-close:hover { color: var(--cone-red); }
+        
+        .edit-modal-form .form-group {
+            margin-bottom: 18px;
+        }
+        
+        .edit-modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        .edit-modal-buttons .btn {
+            flex: 1;
+        }
+        
+        @keyframes slideInModal {
+            0% {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* MODAL POPUP */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay.open { opacity: 1; }
+        .modal-content { background: white; width: 90%; max-width: 500px; max-height: 80vh; border-radius: 12px; padding: 25px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-top: 6px solid var(--cone-red); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .modal-title { font-weight: 700; font-size: 1.3rem; color: var(--cone-black); }
+        .modal-close { background: none; border: none; font-size: 2rem; cursor: pointer; color: #aaa; }
+        .modal-body { overflow-y: auto; flex: 1; }
+
+        @media (max-width: 1000px) { .main-content { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-card">
+        <h2>CONE</h2>
+        <div class="login-subtitle">Control de Proyectos</div>
+        <input type="password" id="passInput" placeholder="Contraseña..." onkeypress="if(event.key==='Enter') verifyPasswordCone()">
+        <button onclick="verifyPasswordCone()" class="btn" style="margin-top:16px;">Entrar</button>
+        <div class="login-footer">by <strong>CONE</strong></div>
+    </div>
+</div>
+
+<script>
+    // FUNCIÓN DE LOGIN INLINE - Se define ANTES del script principal
+    function verifyPasswordCone() {
+        const pass = document.getElementById('passInput').value;
+        const correctPass = "bejerman23+";
+        
+        if (pass === correctPass) {
+            sessionStorage.setItem('cone_auth', 'true');
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            // Llamar loadData cuando esté definida
+            if (typeof loadData !== 'undefined') {
+                loadData();
+            }
+        } else {
+            document.getElementById('passInput').style.borderColor = '#f44336';
+            document.getElementById('passInput').style.boxShadow = '0 0 0 3px rgba(244, 67, 54, 0.2)';
+            if (typeof showNotification !== 'undefined') {
+                showNotification('error', 'Contraseña Incorrecta', 'La contraseña que ingresaste no es válida', 3000);
+            } else {
+                alert('Contraseña incorrecta: usa bejerman23+');
+            }
+            document.getElementById('passInput').value = '';
+            document.getElementById('passInput').focus();
+            
+            setTimeout(() => {
+                document.getElementById('passInput').style.borderColor = '#ddd';
+                document.getElementById('passInput').style.boxShadow = 'none';
+            }, 2000);
+        }
+    }
+</script>
+
+<div id="dayModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle">Detalle</span>
+            <button class="modal-close" onclick="closeDayModal()">×</button>
+        </div>
+        <div class="modal-body" id="modalList">
+            </div>
+    </div>
+</div>
+
+<div id="notification" class="notification">
+    <div class="notif-icon" id="notifIcon"></div>
+    <div class="notif-title" id="notifTitle"></div>
+    <div class="notif-message" id="notifMessage"></div>
+    <div class="notif-buttons" id="notifButtons" style="display: none;"></div>
+</div>
+
+<!-- MODAL DE EDICIÓN -->
+<div id="editModal" class="edit-modal-overlay">
+    <div class="edit-modal-content">
+        <div class="edit-modal-header">
+            <div class="edit-modal-title">✏️ Editar Registro</div>
+            <button class="edit-modal-close" onclick="closeEditModal()">×</button>
+        </div>
+        <form id="editModalForm" class="edit-modal-form">
+            <input type="hidden" id="editModalId">
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="editModalDate" required>
+            </div>
+            <div class="form-group">
+                <label>Cliente</label>
+                <input type="text" id="editModalClient" readonly style="background: #f9f9f9;">
+            </div>
+            <div class="form-group">
+                <label>Solicitante</label>
+                <input type="text" id="editModalRequester" required>
+            </div>
+            <div class="form-group">
+                <label>Horas</label>
+                <input type="number" id="editModalHours" step="0.5" required>
+            </div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="editModalType">
+                    <option value="Remoto">Remoto</option>
+                    <option value="Presencial">Presencial</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <input type="text" id="editModalDesc" placeholder="Detalle">
+            </div>
+            <div class="form-group">
+                <label>Consultor</label>
+                <select id="editModalConsultant">
+                    <option value="">Seleccionar...</option>
+                    <option value="Martín Serati">Martín Serati</option>
+                    <option value="Guido Chaparro">Guido Chaparro</option>
+                    <option value="OTRO">➕ OTRO</option>
+                </select>
+                <input type="text" id="editModalConsultantManual" class="manual-input" placeholder="Nombre del consultor...">
+            </div>
+            <div class="form-group">
+                <label>Proyecto (Opcional)</label>
+                <select id="editModalProject">
+                    <option value="">Sin proyecto</option>
+                </select>
+            </div>
+            <div class="edit-modal-buttons">
+                <button type="submit" class="btn">Guardar Cambios ✔</button>
+                <button type="button" onclick="closeEditModal()" class="btn" style="background: #888;">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL PARA EDITAR SOLICITANTES -->
+<div id="editSolicitanteModal" class="edit-modal-overlay">
+    <div class="edit-modal-content">
+        <div class="edit-modal-header">
+            <div class="edit-modal-title">✏️ Editar Solicitante</div>
+            <button class="edit-modal-close" onclick="closeEditSolicitanteModal()">×</button>
+        </div>
+        <form id="editSolicitanteForm" class="edit-modal-form">
+            <div class="form-group">
+                <label>Nombre Actual</label>
+                <input type="text" id="solicitanteActual" readonly style="background: #f9f9f9;">
+            </div>
+            <div class="form-group">
+                <label>Nuevo Nombre</label>
+                <input type="text" id="solicitanteNuevo" required placeholder="Ingresa el nuevo nombre">
+            </div>
+            <div class="edit-modal-buttons">
+                <button type="submit" class="btn">Actualizar ✔</button>
+                <button type="button" onclick="closeEditSolicitanteModal()" class="btn" style="background: #888;">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="mainApp">
+    <div class="header">
+        <span class="brand-subtitle">CONSULTORA DE NEGOCIOS EMPRESARIOS</span> 
+        <h1 style="font-size:1.8rem; margin:8px 0;">Control de Proyectos</h1>
+        <button onclick="loadData()" id="refreshBtn" class="refresh-btn" title="Sincronizar">⭮</button>
+        <div class="theme-toggle">
+            <button class="theme-btn active" onclick="setTheme('light')" title="Tema Claro">☀️</button>
+            <button class="theme-btn" onclick="setTheme('medium')" title="Tema Intermedio">🌤️</button>
+            <button class="theme-btn" onclick="setTheme('dark')" title="Tema Oscuro">🌙</button>
+        </div>
+        <button onclick="logout()" style="background: none; border: none; color: var(--cone-red); font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: 0.2s;" title="Cerrar sesión" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='none'">🚪</button>
+        <div id="syncStatus" class="sync-status">Sincronizando...</div>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <div class="tabs-header">
+                <button class="tab-btn active" id="btn-tab-hours" onclick="switchLeftTab('hours')">⏱ Horas</button>
+                <button class="tab-btn" id="btn-tab-projects" onclick="switchLeftTab('projects')">🚀 Proyectos</button>
+                <button class="tab-btn" id="btn-tab-tasks" onclick="switchLeftTab('tasks')">📋 Tareas</button>
+            </div>
+
+            <div id="tab-hours">
+                <form id="timeForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-group"><label>Fecha</label><input type="date" id="date" required></div>
+                    <div class="form-group">
+                        <label>Proyecto (Opcional)</label>
+                        <select id="project" onchange="handleProjectChange()">
+                            <option value="">Sin proyecto</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <select id="client" onchange="handleSelectChange('client', 'clientManual')" required></select>
+                        <input type="text" id="clientManual" class="manual-input" placeholder="Nombre cliente...">
+                    </div>
+                    <div class="form-group">
+                        <label>Solicitante</label>
+                        <select id="requester" onchange="handleSelectChange('requester', 'requesterManual')" disabled required></select>
+                        <input type="text" id="requesterManual" class="manual-input" placeholder="Nombre persona...">
+                    </div>
+                    <div class="form-group"><label>Horas</label><input type="number" id="hours" step="0.5" required></div>
+                    <div class="form-group"><label>Tipo</label><select id="type"><option value="Remoto">Remoto</option><option value="Presencial">Presencial</option></select></div>
+                    <div class="form-group"><label>Descripción</label><input type="text" id="billingDesc" placeholder="Detalle"></div>
+                    <div class="form-group">
+                        <label>Consultor</label>
+                        <select id="consultant" onchange="handleSelectChange('consultant', 'consultantManual')" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="Martín Serati">Martín Serati</option>
+                            <option value="Guido Chaparro">Guido Chaparro</option>
+                            <option value="OTRO">➕ OTRO</option>
+                        </select>
+                        <input type="text" id="consultantManual" class="manual-input" placeholder="Nombre del consultor...">
+                    </div>
+                    <button type="submit" id="submitBtn" class="btn">Guardar Horas ✔</button>
+                    <button type="button" id="cancelBtn" onclick="cancelEdit()" class="btn" style="display:none; background:#888; margin-top:8px;">Cancelar</button>
+                </form>
+            </div>
+
+            <div id="tab-projects" style="display:none;">
+                <form id="projectForm">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <select id="projectClient" onchange="handleSelectChange('projectClient', 'projectClientManual')" required></select>
+                        <input type="text" id="projectClientManual" class="manual-input" placeholder="Nuevo cliente...">
+                    </div>
+                    <div class="form-group"><label>Horas Remotas Presupuestadas</label><input type="number" id="projectHoursRemote" step="0.5" required></div>
+                    <div class="form-group"><label>Horas Presenciales Presupuestadas</label><input type="number" id="projectHoursOnSite" step="0.5" required></div>
+                    <div class="form-group"><label>Fecha Entrega</label><input type="date" id="projectDeadline" required></div>
+                    <div class="form-group"><label>Descripción del Proyecto</label><input type="text" id="projectDesc" placeholder="Describe brevemente el proyecto..."></div>
+                    <button type="submit" id="projBtn" class="btn" style="background:var(--cone-black)">Crear Proyecto 🚀</button>
+                </form>
+            </div>
+
+            <div id="tab-tasks" style="display:none;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Nueva Lista</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="newListName" placeholder="Nombre..." style="flex: 1; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem; background: var(--bg-secondary); color: var(--text-primary);">
+                        <button onclick="createList()" class="btn" style="flex: 0 1 auto; width: auto; padding: 8px 12px; background: var(--cone-red); font-size: 0.85rem;">➕ Crear</button>
+                    </div>
+                </div>
+                <div id="listasContainer" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="tabs-header">
+                <button class="tab-btn active" id="btn-view-list" onclick="switchRightView('list')">📋 Listado</button>
+                <button class="tab-btn" id="btn-view-calendar" onclick="switchRightView('calendar')">📅 Calendario</button>
+                <button class="tab-btn" id="btn-view-tasks" onclick="switchRightView('tasks')" style="display:none;">✅ Lista de Tareas</button>
+            </div>
+
+            <div id="view-list">
+                <!-- RESUMEN -->
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid var(--cone-red);">
+                    <div style="font-weight: 700; color: var(--cone-red); margin-bottom: 15px; font-size: 1.1rem;">📊 RESUMEN</div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px;">
+                        <div style="background: var(--cone-black); color: white; padding: 15px; border-radius: 10px; text-align: center; border-bottom: 3px solid var(--cone-red);">
+                            <div id="summaryHours" style="font-size: 2rem; font-weight: 700;">0</div>
+                            <div style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Total Horas</div>
+                        </div>
+                        <div style="background: var(--cone-black); color: white; padding: 15px; border-radius: 10px; text-align: center; border-bottom: 3px solid var(--cone-red);">
+                            <div id="summaryClients" style="font-size: 2rem; font-weight: 700;">0</div>
+                            <div style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Clientes</div>
+                        </div>
+                        <div style="background: var(--cone-black); color: white; padding: 15px; border-radius: 10px; text-align: center; border-bottom: 3px solid var(--cone-red);">
+                            <div id="summaryRecords" style="font-size: 2rem; font-weight: 700;">0</div>
+                            <div style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Registros</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FILTROS CASCADA HORIZONTAL ULTRA COMPACTO -->
+                <div style="display: flex; gap: 12px; margin-bottom: 15px; align-items: flex-end; flex-wrap: wrap;">
+                    <!-- DÍAS -->
+                    <div style="flex: 0 1 auto; min-width: 140px;">
+                        <label style="font-size: 0.6rem; font-weight: 700; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px;">Desde Día</label>
+                        <select id="fDayFrom" style="width:100%; font-size: 0.85rem; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"></select>
+                    </div>
+                    
+                    <div style="flex: 0 1 auto; min-width: 140px; display: none;" id="dayToContainer">
+                        <label style="font-size: 0.6rem; font-weight: 700; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px;">Hasta Día</label>
+                        <select id="fDayTo" style="width:100%; font-size: 0.85rem; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"></select>
+                    </div>
+
+                    <!-- MESES -->
+                    <div style="flex: 0 1 auto; min-width: 140px;">
+                        <label style="font-size: 0.6rem; font-weight: 700; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px;">Desde Mes</label>
+                        <select id="fMonthFrom" style="width:100%; font-size: 0.85rem; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">Elegir</option><option value="01">Ene</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Abr</option><option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Ago</option><option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dic</option>
+                        </select>
+                    </div>
+                    
+                    <div style="flex: 0 1 auto; min-width: 140px; display: none;" id="monthToContainer">
+                        <label style="font-size: 0.6rem; font-weight: 700; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px;">Hasta Mes</label>
+                        <select id="fMonthTo" style="width:100%; font-size: 0.85rem; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">Elegir</option><option value="01">Ene</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Abr</option><option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Ago</option><option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dic</option>
+                        </select>
+                    </div>
+
+                    <!-- AÑO Y CLIENTE -->
+                    <div style="flex: 0 1 auto; min-width: 100px;">
+                        <label style="font-size: 0.6rem; font-weight: 700; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px;">Año</label>
+                        <select id="fYear" style="width:100%; font-size: 0.85rem; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="2025">2025</option><option value="2026">2026</option><option value="2024">2024</option>
+                        </select>
+                    </div>
+                    
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="font-size: 0.6rem; font-weight: 700; color: #888; text-transform: uppercase; display: block; margin-bottom: 3px;">Cliente</label>
+                        <select id="fClient" style="width:100%; font-size: 0.85rem; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"><option value="">Todos</option></select>
+                    </div>
+                </div>
+
+                <!-- LISTADO -->
+                <div id="recordsList" style="max-height:500px; overflow-y:auto; margin-bottom:20px;"></div>
+
+                <!-- SECCIÓN DE REPORTES -->
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 10px; border-left: 5px solid var(--cone-red);">
+                    <label style="display: block; margin-bottom: 12px; font-weight: 700; font-size: 0.9rem; color: #666; text-transform: uppercase;">📄 Tipo de Reporte</label>
+                    <select id="reportType" style="width:100%; margin-bottom: 12px; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                        <option value="">Seleccionar tipo...</option>
+                        <option value="horas">📊 Horas por Cliente</option>
+                        <option value="proyecto">🚀 Horas por Proyecto</option>
+                        <option value="amv">📋 Horas AMV</option>
+                    </select>
+                    
+                    <!-- Selector de Cliente para Horas por Cliente -->
+                    <div id="selectorHoras" style="margin-bottom: 12px; display: none;">
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Cliente</label>
+                            <select id="reportHorasCliente" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="">Seleccionar cliente...</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Desde Mes</label>
+                                <select id="reportHorasMesFrom" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                                    <option value="">Elegir</option>
+                                    <option value="01">Enero</option>
+                                    <option value="02">Febrero</option>
+                                    <option value="03">Marzo</option>
+                                    <option value="04">Abril</option>
+                                    <option value="05">Mayo</option>
+                                    <option value="06">Junio</option>
+                                    <option value="07">Julio</option>
+                                    <option value="08">Agosto</option>
+                                    <option value="09">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Hasta Mes</label>
+                                <select id="reportHorasMesTo" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                                    <option value="">Elegir</option>
+                                    <option value="01">Enero</option>
+                                    <option value="02">Febrero</option>
+                                    <option value="03">Marzo</option>
+                                    <option value="04">Abril</option>
+                                    <option value="05">Mayo</option>
+                                    <option value="06">Junio</option>
+                                    <option value="07">Julio</option>
+                                    <option value="08">Agosto</option>
+                                    <option value="09">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Selector de Proyecto - Solo aparece cuando seleccionas "Horas por Proyecto" -->
+                    <div id="selectorProyecto" style="margin-bottom: 12px; display: none;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Proyecto</label>
+                        <select id="reportProyecto" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                            <option value="">Seleccionar proyecto...</option>
+                        </select>
+                    </div>
+
+                    <!-- Selector para Horas por Cliente -->
+                    <div id="selectorHoras" style="margin-bottom: 12px; display: none;">
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Cliente</label>
+                            <select id="reportHorasCliente" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="">Seleccionar cliente...</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Desde Mes</label>
+                                <select id="reportHorasMesFrom" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                                    <option value="">Elegir</option>
+                                    <option value="01">Enero</option>
+                                    <option value="02">Febrero</option>
+                                    <option value="03">Marzo</option>
+                                    <option value="04">Abril</option>
+                                    <option value="05">Mayo</option>
+                                    <option value="06">Junio</option>
+                                    <option value="07">Julio</option>
+                                    <option value="08">Agosto</option>
+                                    <option value="09">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Hasta Mes</label>
+                                <select id="reportHorasMesTo" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                                    <option value="">Elegir</option>
+                                    <option value="01">Enero</option>
+                                    <option value="02">Febrero</option>
+                                    <option value="03">Marzo</option>
+                                    <option value="04">Abril</option>
+                                    <option value="05">Mayo</option>
+                                    <option value="06">Junio</option>
+                                    <option value="07">Julio</option>
+                                    <option value="08">Agosto</option>
+                                    <option value="09">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selector de Rango de Meses para AMV -->
+                    <div id="selectorAMV" style="margin-bottom: 12px; display: none;">
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Cliente</label>
+                            <select id="reportAMVCliente" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                                <option value="">Todos los Clientes</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Desde Mes</label>
+                                <select id="reportAMVMesFrom" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                                    <option value="">Elegir</option>
+                                    <option value="01">Enero</option>
+                                    <option value="02">Febrero</option>
+                                    <option value="03">Marzo</option>
+                                    <option value="04">Abril</option>
+                                    <option value="05">Mayo</option>
+                                    <option value="06">Junio</option>
+                                    <option value="07">Julio</option>
+                                    <option value="08">Agosto</option>
+                                    <option value="09">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: #888; text-transform: uppercase;">Hasta Mes</label>
+                                <select id="reportAMVMesTo" style="width:100%; font-size:1rem; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                                    <option value="">Elegir</option>
+                                    <option value="01">Enero</option>
+                                    <option value="02">Febrero</option>
+                                    <option value="03">Marzo</option>
+                                    <option value="04">Abril</option>
+                                    <option value="05">Mayo</option>
+                                    <option value="06">Junio</option>
+                                    <option value="07">Julio</option>
+                                    <option value="08">Agosto</option>
+                                    <option value="09">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="handlePreviewPDF()" class="btn" style="background: #2196F3; flex: 1;">👁️ Previsualizar</button>
+                        <button onclick="handleGeneratePDF()" class="btn" style="background: var(--cone-black); flex: 1;">📥 Descargar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-calendar" style="display:none;">
+                <div class="calendar-controls">
+                    <button onclick="changeMonth(-1)" style="background: var(--cone-red); color: white; border: none; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 1.1rem; font-weight: 700; transition: 0.2s; width: 45px;" onmouseover="this.style.background='var(--cone-black)'" onmouseout="this.style.background='var(--cone-red)'">◀</button>
+                    <b id="calMonthLabel" style="font-size:1.2rem; flex: 1; text-align: center;"></b>
+                    <button onclick="changeMonth(1)" style="background: var(--cone-red); color: white; border: none; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 1.1rem; font-weight: 700; transition: 0.2s; width: 45px;" onmouseover="this.style.background='var(--cone-black)'" onmouseout="this.style.background='var(--cone-red)'">▶</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+            <div id="view-tasks" style="display:none;">
+                <div id="tasksViewContainer">
+                    <!-- Se llenará dinámicamente con las tareas -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNF5pO9cw_Qpn3JeqUz1gH5xjDMuTJygJMekP2QI_cYU10BA65_9xnXxdzEjsuU-23/exec';
+    let timeRecords = [];
+    let currentCalDate = new Date();
+
+    // FUNCIÓN DE LOGIN - DECLARADA PRIMERO
+    function verifyPass() {
+        const pass = document.getElementById('passInput').value;
+        const correctPass = "bejerman23+";
+        
+        if (pass === correctPass) {
+            localStorage.setItem('cone_auth', 'true');
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            loadData();
+        } else {
+            document.getElementById('passInput').style.borderColor = '#f44336';
+            document.getElementById('passInput').style.boxShadow = '0 0 0 3px rgba(244, 67, 54, 0.2)';
+            showNotification('error', 'Contraseña Incorrecta', 'La contraseña que ingresaste no es válida', 3000);
+            document.getElementById('passInput').value = '';
+            document.getElementById('passInput').focus();
+            
+            // Resetear el borde después de 2 segundos
+            setTimeout(() => {
+                document.getElementById('passInput').style.borderColor = '#ddd';
+                document.getElementById('passInput').style.boxShadow = 'none';
+            }, 2000);
+        }
+    }
+
+    // NOTIFICACIONES PERSONALIZADAS
+    function showNotification(type, title, message, duration = 3000, buttons = null) {
+        const notif = document.getElementById('notification');
+        const icon = document.getElementById('notifIcon');
+        const titleEl = document.getElementById('notifTitle');
+        const msgEl = document.getElementById('notifMessage');
+        const buttonsContainer = document.getElementById('notifButtons');
+        
+        // Configurar icono y tipo
+        const icons = {
+            warning: '⚠️',
+            error: '❌',
+            success: '✅',
+            confirm: '❓'
+        };
+        
+        icon.textContent = icons[type] || '📌';
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        
+        // Remover clase hide si existe
+        notif.classList.remove('hide');
+        notif.classList.remove('warning', 'error', 'success', 'confirm');
+        notif.classList.add(type);
+        notif.classList.add('show');
+        
+        // Manejar botones
+        if (buttons) {
+            buttonsContainer.innerHTML = '';
+            buttons.forEach(btn => {
+                const button = document.createElement('button');
+                button.className = `notif-btn ${btn.class}`;
+                button.textContent = btn.text;
+                button.onclick = () => {
+                    btn.callback();
+                    notif.classList.add('hide');
+                    setTimeout(() => {
+                        notif.classList.remove('show', 'hide');
+                    }, 300);
+                };
+                buttonsContainer.appendChild(button);
+            });
+            buttonsContainer.style.display = 'flex';
+            duration = 0; // No auto-hide si hay botones
+        } else {
+            buttonsContainer.style.display = 'none';
+        }
+        
+        // Ocultar después del tiempo especificado
+        if (duration > 0) {
+            setTimeout(() => {
+                notif.classList.add('hide');
+                setTimeout(() => {
+                    notif.classList.remove('show', 'hide');
+                }, 300);
+            }, duration);
+        }
+    }
+
+    // Login Persistente - Simplificado
+    window.addEventListener('DOMContentLoaded', function() {
+        // Cargar tema guardado
+        const savedTheme = localStorage.getItem('cone_theme') || 'light';
+        setTheme(savedTheme);
+        
+        if(localStorage.getItem('cone_auth')) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            loadData();
+        }
+    });
+    
+    // FUNCIONES DE TEMA
+    function setTheme(theme) {
+        // Remover todas las clases de tema
+        document.body.classList.remove('theme-light', 'theme-medium', 'theme-dark');
+        
+        // Agregar la clase del tema seleccionado
+        document.body.classList.add(`theme-${theme}`);
+        
+        // Guardar preferencia
+        localStorage.setItem('cone_theme', theme);
+        
+        // Actualizar botones activos
+        document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+    
+    function logout() {
+        if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+            localStorage.removeItem('cone_auth');
+            location.reload();
+        }
+    }
+
+    // INICIALIZAR OPCIONES DE DÍAS
+    function populateDays() {
+        ['fDayFrom', 'fDayTo'].forEach(id => {
+            const dSel = document.getElementById(id);
+            for(let i=1; i<=31; i++) { 
+                let v = i < 10 ? '0'+i : i;
+                let opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                dSel.appendChild(opt);
+            }
+        });
+    }
+    
+    // INICIALIZAR FILTROS CON LA FECHA DE HOY (Argentina - ART = UTC-3)
+    function initializeFilters() {
+        // Usar fecha actual de Argentina
+        const today = new Date();
+        const todayDay = String(today.getDate()).padStart(2, '0');
+        const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+        const todayYear = today.getFullYear().toString();
+        
+        // Obtener el último día del mes actual
+        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        const lastDayOfMonthStr = String(lastDayOfMonth).padStart(2, '0');
+        
+        // Llenar opciones de días primero
+        populateDays();
+        
+        // Inicializar rango: desde hoy hasta el último día del mes
+        document.getElementById('fDayFrom').value = todayDay;
+        document.getElementById('fDayTo').value = lastDayOfMonthStr;
+        document.getElementById('fMonthFrom').value = todayMonth;
+        document.getElementById('fMonthTo').value = todayMonth;
+        document.getElementById('fYear').value = todayYear;
+        
+        // Mostrar los containers de "Hasta Día" y "Hasta Mes" porque ya tienen valores
+        document.getElementById('dayToContainer').style.display = 'block';
+        document.getElementById('monthToContainer').style.display = 'block';
+        
+        document.getElementById('date').valueAsDate = new Date();
+    }
+    
+    // Llamar cuando el DOM está listo
+    document.addEventListener('DOMContentLoaded', initializeFilters);
+    function switchLeftTab(t) {
+        document.getElementById('tab-hours').style.display = t==='hours'?'block':'none';
+        document.getElementById('tab-projects').style.display = t==='projects'?'block':'none';
+        document.getElementById('tab-tasks').style.display = t==='tasks'?'block':'none';
+        document.getElementById('btn-tab-hours').className = t==='hours'?'tab-btn active':'tab-btn';
+        document.getElementById('btn-tab-projects').className = t==='projects'?'tab-btn active':'tab-btn';
+        document.getElementById('btn-tab-tasks').className = t==='tasks'?'tab-btn active':'tab-btn';
+        if(t==='tasks') loadListas();
+    }
+    function switchRightView(v) {
+        document.getElementById('view-list').style.display = v==='list'?'block':'none';
+        document.getElementById('view-calendar').style.display = v==='calendar'?'block':'none';
+        document.getElementById('view-tasks').style.display = v==='tasks'?'block':'none';
+        document.getElementById('btn-view-list').className = v==='list'?'tab-btn active':'tab-btn';
+        document.getElementById('btn-view-calendar').className = v==='calendar'?'tab-btn active':'tab-btn';
+        document.getElementById('btn-view-tasks').className = v==='tasks'?'tab-btn active':'tab-btn';
+        if(v==='calendar') renderCalendar();
+        if(v==='tasks') renderTasksView();
+    }
+
+    // CARGA DE DATOS
+    let proyectos = [];
+    let listas = [];
+    let tareas = [];
+    let listaActualId = null;
+    const proyectosEspeciales = {
+        'ABONADOS': { id: 'ABONADOS', descripcion: 'Horas Abonadas', cliente: '', tipo: 'abonado' },
+        'AMV': { id: 'AMV', descripcion: 'AMV', cliente: '', tipo: 'amv' }
+    };
+
+    async function loadData() {
+        const ss = document.getElementById('syncStatus');
+        const rBtn = document.getElementById('refreshBtn');
+        
+        ss.style.display = 'block';
+        ss.innerText = 'Sincronizando...';
+        rBtn.classList.add('spinning');
+
+        try {
+            console.log('Intentando conectar a:', SCRIPT_URL);
+            const res = await fetch(SCRIPT_URL);
+            console.log('Respuesta recibida. Status:', res.status);
+            
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            
+            const data = await res.json();
+            console.log('Datos recibidos:', data);
+            
+            // Manejar nuevo formato con horas, proyectos y listas
+            if (data.horas && data.proyectos !== undefined) {
+                timeRecords = data.horas;
+                proyectos = data.proyectos;
+                listas = data.listas || [];
+                console.log('Formato nuevo detectado. Horas:', timeRecords.length, 'Proyectos:', proyectos.length, 'Listas:', listas.length);
+                populateProjectSelector();
+            } else if (Array.isArray(data)) {
+                // Formato antiguo (solo horas)
+                timeRecords = data;
+                proyectos = [];
+                listas = [];
+                console.log('Formato antiguo detectado. Horas:', timeRecords.length);
+            } else {
+                throw new Error('Formato de datos no reconocido');
+            }
+            
+            populateFilters();
+            renderList();
+            renderCalendar();
+            loadListas();
+            ss.style.display = 'none';
+        } catch(e) { 
+            console.error('Error completo:', e);
+            ss.innerText = `Error: ${e.message}`; 
+            showNotification('error', 'Error de Conexión', `No se pudieron cargar los datos: ${e.message}`, 5000);
+        }
+        
+        rBtn.classList.remove('spinning');
+    }
+
+    function populateProjectSelector() {
+        const projectSelect = document.getElementById('project');
+        const proyectosConEspeciales = [
+            ...Object.values(proyectosEspeciales),
+            ...proyectos
+        ];
+        const options = '<option value="">Sin proyecto</option>' + 
+            proyectosConEspeciales.map(p => {
+                // Si el cliente está vacío (proyectos especiales), solo mostrar descripción
+                const label = p.cliente ? `${p.cliente} - ${p.descripcion || 'Sin descripción'}` : p.descripcion;
+                return `<option value="${p.id}" data-cliente="${p.cliente}" data-descripcion="${p.descripcion || ''}">${label}</option>`;
+            }).join('');
+        projectSelect.innerHTML = options;
+    }
+
+    function handleProjectChange() {
+        const projectId = document.getElementById('project').value;
+        if (projectId) {
+            const proyecto = proyectos.find(p => p.id.toString() === projectId.toString());
+            if (proyecto) {
+                document.getElementById('client').value = proyecto.cliente;
+                handleSelectChange('client', 'clientManual');
+            }
+        }
+    }
+
+    function populateFilters() {
+        const clients = [...new Set(timeRecords.map(r => r.cliente))].filter(Boolean).sort();
+        const opts = '<option value="">Seleccionar...</option>' + clients.map(c => `<option value="${c}">${c}</option>`).join('') + '<option value="OTRO">➕ NUEVO</option>';
+        document.getElementById('client').innerHTML = opts;
+        document.getElementById('projectClient').innerHTML = opts;
+        document.getElementById('fClient').innerHTML = '<option value="">Todos los Clientes</option>' + clients.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    function handleSelectChange(selId, manId) {
+        const s = document.getElementById(selId);
+        const m = document.getElementById(manId);
+        const isOtro = s.value === 'OTRO';
+        m.style.display = isOtro ? 'block' : 'none';
+        m.required = isOtro;
+
+        if(selId === 'client') {
+            const req = document.getElementById('requester');
+            req.disabled = !s.value;
+            if(s.value && !isOtro) {
+                const solis = [...new Set(timeRecords.filter(r => r.cliente === s.value).map(r => r.solicitante))].filter(Boolean);
+                req.innerHTML = '<option value="">Solicitante...</option>' + solis.map(x => `<option value="${x}">${x}</option>`).join('') + '<option value="OTRO">➕ NUEVO</option>';
+            } else if(isOtro) {
+                req.innerHTML = '<option value="OTRO">➕ NUEVO</option>';
+                req.dispatchEvent(new Event('change'));
+            }
+        }
+    }
+
+    // LISTADO PRINCIPAL
+    function renderList() {
+        const c = document.getElementById('fClient').value;
+        const mFrom = document.getElementById('fMonthFrom').value;
+        const mTo = document.getElementById('fMonthTo').value;
+        const dFrom = document.getElementById('fDayFrom').value;
+        const dTo = document.getElementById('fDayTo').value;
+        const y = document.getElementById('fYear').value;
+
+        const filtered = timeRecords.filter(r => {
+            if(!r.fecha) return false;
+            const p = r.fecha.split('-');
+            const rYear = p[0];
+            const rMonth = p[1];
+            const rDay = p[2];
+            
+            // Filtrar por cliente
+            if(c && r.cliente !== c) return false;
+            
+            // Filtrar por año
+            if(y && rYear !== y) return false;
+            
+            // Filtrar por rango de meses
+            if(mFrom && mTo) {
+                if(rMonth < mFrom || rMonth > mTo) return false;
+            } else {
+                if(mFrom && rMonth < mFrom) return false;
+                if(mTo && rMonth > mTo) return false;
+            }
+            
+            // Filtrar por rango de días
+            if(dFrom && dTo) {
+                if(rDay < dFrom || rDay > dTo) return false;
+            } else {
+                if(dFrom && rDay < dFrom) return false;
+                if(dTo && rDay > dTo) return false;
+            }
+            
+            return true;
+        }).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+
+        // CALCULAR ESTADÍSTICAS
+        const totalHoras = filtered.reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+        const uniqueClients = new Set(filtered.map(r => r.cliente)).size;
+        const totalRegistros = filtered.length;
+
+        // ACTUALIZAR RESUMEN
+        document.getElementById('summaryHours').innerText = totalHoras.toFixed(1);
+        document.getElementById('summaryClients').innerText = uniqueClients;
+        document.getElementById('summaryRecords').innerText = totalRegistros;
+
+        document.getElementById('recordsList').innerHTML = filtered.map(r => generateRecordHTML(r)).join('') || '<p style="text-align:center; padding:30px; opacity:0.5; font-size:1.1rem;">Sin datos</p>';
+    }
+
+    // HTML Genérico de fila (usado en Lista y en Modal) - CON EDICIÓN INLINE
+    function generateRecordHTML(r) {
+        // Siempre intentar usar ID real primero
+        let recordId = String(r.id).trim();
+        
+        // Si el ID está vacío o no es válido, usar combinación única
+        if (!recordId || !recordId.match(/^\d+$/)) {
+            recordId = encodeURIComponent(`${r.cliente}|${r.fecha}|${r.solicitante}|${r.horas}|${r.tipo || 'Remoto'}`);
+        }
+        
+        return `
+            <div class="record-item">
+                <div class="record-info">
+                    <div class="record-client-name">${r.cliente}</div>
+                    <div class="record-meta">
+                        📅 ${r.fecha.split('-').reverse().join('/')} | 
+                        👤 <span class="editable-solicitante" data-original="${r.solicitante}" data-record-id="${recordId}" onclick="activateInlineEdit(this)" style="cursor: pointer; padding: 2px 6px; border-radius: 3px; transition: 0.2s;">${r.solicitante}</span> | 
+                        👨‍💼 <span class="editable-consultor" data-original="${r.consultor || '-'}" data-record-id="${recordId}" onclick="activateInlineEdit(this)" style="cursor: pointer; padding: 2px 6px; border-radius: 3px; transition: 0.2s;">${r.consultor || '-'}</span>
+                    </div>
+                    <div class="record-desc">📝 ${r.descripcion || ''}</div>
+                </div>
+                <div class="record-side">
+                    <span class="record-hours-badge">${r.horas}h</span>
+                    <div class="record-actions">
+                        <button onclick="prepareEditFromRecord('${recordId}')" class="action-btn edit" title="Editar">✎</button>
+                        <button onclick="deleteRecordFromRecord('${recordId}')" class="action-btn delete" title="Eliminar">🗑</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // EDICIÓN INLINE
+    function activateInlineEdit(element) {
+        // Si ya está en modo edición, ignorar
+        if (element.classList.contains('editing')) return;
+        
+        const fieldType = element.classList.contains('editable-solicitante') ? 'solicitante' : 'consultor';
+        const originalValue = element.getAttribute('data-original');
+        
+        // Crear input editable
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = originalValue;
+        input.className = 'inline-edit-input';
+        input.style.cssText = `
+            padding: 4px 8px;
+            border: 2px solid var(--cone-red);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: #fff;
+        `;
+        
+        // Reemplazar el span con el input
+        const parent = element.parentNode;
+        const placeholder = element;
+        element.classList.add('editing');
+        element.style.display = 'none';
+        parent.insertBefore(input, element.nextSibling);
+        
+        input.focus();
+        input.select();
+        
+        // Función para guardar cambios
+        const saveEdit = async () => {
+            const newValue = input.value.trim();
+            
+            if (!newValue) {
+                showNotification('warning', 'Campo Vacío', 'No puedes dejar el campo vacío');
+                input.focus();
+                return;
+            }
+            
+            if (newValue === originalValue) {
+                // Sin cambios, volver al original
+                input.remove();
+                placeholder.classList.remove('editing');
+                placeholder.style.display = 'inline';
+                return;
+            }
+            
+            // Ejecutar bulk update
+            input.disabled = true;
+            input.style.opacity = '0.5';
+            await performBulkUpdate(fieldType, originalValue, newValue, placeholder, input, parent);
+        };
+        
+        // Guardar con Enter
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') saveEdit();
+            if (e.key === 'Escape') {
+                input.remove();
+                placeholder.classList.remove('editing');
+                placeholder.style.display = 'inline';
+            }
+        });
+        
+        // Guardar al perder el foco
+        input.addEventListener('blur', saveEdit);
+    }
+    
+    async function performBulkUpdate(fieldType, oldValue, newValue, placeholder, input, parent) {
+        // Mostrar confirmación
+        return new Promise((resolve) => {
+            showNotification('confirm', '🔄 Actualizar en Todos los Registros', 
+                `¿Actualizar todos los registros donde ${fieldType === 'solicitante' ? 'Solicitante' : 'Consultor'} = "${oldValue}" a "${newValue}"?`, 
+                0, 
+                [
+                    {
+                        text: 'Confirmar',
+                        class: 'confirm',
+                        callback: async () => {
+                            await executeBulkUpdate(fieldType, oldValue, newValue);
+                            input.remove();
+                            placeholder.classList.remove('editing');
+                            placeholder.style.display = 'inline';
+                            resolve();
+                        }
+                    },
+                    {
+                        text: 'Cancelar',
+                        class: 'cancel',
+                        callback: () => {
+                            input.remove();
+                            placeholder.classList.remove('editing');
+                            placeholder.style.display = 'inline';
+                            resolve();
+                        }
+                    }
+                ]
+            );
+        });
+    }
+    
+    async function executeBulkUpdate(fieldType, oldValue, newValue) {
+        console.log(`=== BULK UPDATE ===`);
+        console.log(`Campo: ${fieldType}`);
+        console.log(`Valor anterior: ${oldValue}`);
+        console.log(`Valor nuevo: ${newValue}`);
+        
+        // Contar cuántos registros se van a actualizar
+        const recordsToUpdate = timeRecords.filter(r => {
+            if (fieldType === 'solicitante') return r.solicitante === oldValue;
+            if (fieldType === 'consultor') return (r.consultor || '-') === oldValue;
+            return false;
+        });
+        
+        console.log(`Registros a actualizar: ${recordsToUpdate.length}`);
+        
+        if (recordsToUpdate.length === 0) {
+            showNotification('warning', 'Sin Coincidencias', `No hay registros con ${fieldType} = "${oldValue}"`);
+            return;
+        }
+        
+        // Actualizar en memoria
+        timeRecords = timeRecords.map(r => {
+            if (fieldType === 'solicitante' && r.solicitante === oldValue) {
+                return {...r, solicitante: newValue};
+            }
+            if (fieldType === 'consultor' && (r.consultor || '-') === oldValue) {
+                return {...r, consultor: newValue === '-' ? '' : newValue};
+            }
+            return r;
+        });
+        
+        // Aquí irían las llamadas al servidor para persistir los cambios
+        // Por ahora, solo actualizamos localmente y en la UI
+        
+        showNotification('success', '✅ Actualización Completa', 
+            `${recordsToUpdate.length} registro(s) actualizado(s) correctamente`, 3000);
+        
+        // Actualizar la UI
+        renderList();
+        populateFilters();
+        renderCalendar();
+    }
+
+    // TIPOS DE PROYECTOS ESPECIALES (No facturables)
+    const PROYECTO_TYPES = {
+        ABONADOS: 'Abonados',
+        AVM: 'AVM (A Mes Vencido)',
+        NORMAL: 'Normal'  // Proyectos normales que sí facturan
+    };
+    
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = '';
+        const y = currentCalDate.getFullYear();
+        const m = currentCalDate.getMonth();
+        document.getElementById('calMonthLabel').innerText = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(currentCalDate).toUpperCase();
+
+        ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].forEach(d => grid.innerHTML += `<div class="cal-header">${d}</div>`);
+
+        const first = new Date(y, m, 1).getDay();
+        const days = new Date(y, m + 1, 0).getDate();
+        let offset = first === 0 ? 6 : first - 1;
+
+        // Agregar celdas vacías al inicio
+        for (let i = 0; i < offset; i++) {
+            grid.innerHTML += `<div></div>`;
+        }
+
+        // Agregar todos los días del mes
+        for (let day = 1; day <= days; day++) {
+            const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const dayData = timeRecords.filter(r => r.fecha === dStr);
+            
+            // Calcular horas FACTURABLES (normales + AMV, excluye ABONADOS)
+            const horasFacturables = getHorasFacturables(dayData);
+            
+            // Calcular horas ABONADAS (solo para mostrar, no influyen en color)
+            const horasAbonadas = getHorasAbonadas(dayData);
+            
+            // Calcular horas AMV (para mostrar separadamente)
+            const horasAMV = getHorasAMV(dayData);
+            
+            // Calcular TODAS las horas
+            const horasTotales = getHorasTotales(dayData);
+            
+            // AQUI ESTA EL LIMITE DE 3 CLIENTES
+            let chips = dayData.slice(0, 3).map(r => `<div class="cal-chip">${r.cliente}</div>`).join('');
+            if(dayData.length > 3) chips += `<div style="font-size:9px; color:var(--cone-red); font-weight:700; text-align:center;">+${dayData.length-3}</div>`;
+
+            const isToday = new Date().toISOString().split('T')[0] === dStr;
+            
+            // SEMÁFORO: Basado en horas FACTURABLES (normales + AMV)
+            const hoursClass = getHoursClass(horasFacturables);
+            
+            // Mostrar TODAS las horas
+            const displayHoras = horasTotales > 0 ? `${horasTotales}h` : '';
+            
+            // Mostrar tanto ABONADOS como AMV (solo informativos, AMV cuenta en semáforo)
+            let notasEspeciales = '';
+            if (horasAbonadas > 0) {
+                notasEspeciales += `<div style="font-size: 8px; color: #2196F3; margin-top: 2px; font-style: italic;">📌 ${horasAbonadas}h abon.</div>`;
+            }
+            if (horasAMV > 0) {
+                notasEspeciales += `<div style="font-size: 8px; color: #FF9800; margin-top: 1px; font-style: italic;">📌 ${horasAMV}h AMV</div>`;
+            }
+            
+            grid.innerHTML += `
+            <div class="cal-day ${isToday?'today':''}" onclick="openDayModal('${dStr}')">
+                <span class="cal-num">${day}</span>
+                <div>${chips}</div>
+                ${displayHoras ? `<div class="cal-total-hours ${hoursClass}">${displayHoras}</div>` : ''}
+                ${notasEspeciales}
+            </div>`;
+        }
+    }
+    function changeMonth(s) { currentCalDate.setMonth(currentCalDate.getMonth() + s); renderCalendar(); }
+
+    // ===== LÓGICA DE SEPARACIÓN DE HORAS =====
+    // Determinar si un registro es ABONADO (no facturable)
+    // AMV también es facturable, solo que se paga a mes vencido
+    function esAbonado(proyectoId) {
+        if (!proyectoId || proyectoId === "" || proyectoId === null) {
+            return false;
+        }
+        const idStr = String(proyectoId).toUpperCase().trim();
+        return idStr === 'ABONADOS';
+    }
+
+    // Determinar si es AMV (facturable a mes vencido)
+    function esAMV(proyectoId) {
+        if (!proyectoId || proyectoId === "" || proyectoId === null) {
+            return false;
+        }
+        const idStr = String(proyectoId).toUpperCase().trim();
+        return idStr === 'AMV';
+    }
+
+    // ===== FUNCIONES DE TAREAS =====
+    
+    function loadListas() {
+        const container = document.getElementById('listasContainer');
+        console.log('loadListas ejecutándose. Listas recibidas:', listas);
+        if (!listas || listas.length === 0) {
+            container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary);">No hay listas creadas aún</div>';
+            return;
+        }
+        
+        container.innerHTML = listas.map(lista => `
+            <div class="record-item" onclick="selectList('${lista.id}')" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                <div class="record-info">
+                    <div class="record-client-name">📋 ${lista.nombre}</div>
+                    <div class="record-meta">${lista.estado}</div>
+                </div>
+                <div class="record-side">
+                    <span style="font-size: 0.85rem; color: var(--cone-red); font-weight: 700;">Click para abrir</span>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function createList() {
+        const nombre = document.getElementById('newListName').value.trim();
+        if (!nombre) {
+            showNotification('warning', 'Nombre Requerido', 'Por favor ingresa un nombre para la lista');
+            return;
+        }
+        
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = '⏳ Creando...';
+        
+        const payload = {
+            action: 'save_list',
+            nombre: nombre
+        };
+        
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', 'Lista Creada', '✅');
+                document.getElementById('newListName').value = '';
+                
+                // Agregar la lista localmente en lugar de recargar todo
+                const newId = Date.now();
+                listas.push({
+                    id: newId,
+                    nombre: nombre,
+                    fechaCreacion: new Date().toLocaleDateString('es-ES'),
+                    estado: 'Activa'
+                });
+                loadListas();
+            } else {
+                showNotification('error', 'Error', data.error || 'No se pudo crear la lista');
+            }
+            btn.disabled = false;
+            btn.textContent = '➕ Crear';
+        })
+        .catch(e => {
+            showNotification('error', 'Error', e.message);
+            btn.disabled = false;
+            btn.textContent = '➕ Crear';
+        });
+    }
+    
+    function selectList(listaId) {
+        listaActualId = listaId;
+        const listaSeleccionada = listas.find(l => l.id === listaId);
+        document.getElementById('btn-view-tasks').style.display = 'block';
+        switchRightView('tasks');
+    }
+    
+    function renderTasksView() {
+        const container = document.getElementById('tasksViewContainer');
+        const lista = listas.find(l => l.id === listaActualId);
+        
+        if (!lista) {
+            container.innerHTML = '<div style="padding: 20px; text-align: center;">Selecciona una lista primero</div>';
+            return;
+        }
+        
+        container.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: var(--cone-red); margin: 0;">📋 ${lista.nombre}</h3>
+                    <button onclick="editList('${lista.id}')" class="action-btn edit" title="Editar lista" style="color: #2196F3; font-size: 1.2rem;">✏️</button>
+                </div>
+                <form onsubmit="saveTarea(event)">
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Descripción</label>
+                        <input type="text" id="taskDesc" placeholder="Describe la tarea..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Prioridad (Semáforo)</label>
+                        <select id="taskPriority" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                            <option value="verde">🟢 Baja</option>
+                            <option value="amarillo" selected>🟡 Media</option>
+                            <option value="rojo">🔴 Alta</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn" style="background: var(--cone-red);">➕ Agregar Tarea</button>
+                </form>
+            </div>
+            <div id="tasksList" style="margin-bottom: 20px;"></div>
+            <div id="tasksCompletedSection" style="display: none; border-top: 2px solid var(--border-color); padding-top: 15px;">
+                <button onclick="toggleCompleted()" style="background: none; border: none; cursor: pointer; color: var(--cone-red); font-weight: 700; font-size: 0.9rem; padding: 0; display: flex; align-items: center; gap: 8px;">
+                    <span id="completedToggleIcon">▶️</span>
+                    <span id="completedCount">0 elementos completados</span>
+                </button>
+                <div id="tasksCompletedList" style="display: none; margin-top: 10px;"></div>
+            </div>
+        `;
+        
+        loadTareasParaLista(listaActualId);
+    }
+    
+    function loadTareasParaLista(listaId) {
+        console.log('Cargando tareas para lista:', listaId);
+        const payload = {
+            action: 'get_tasks',
+            listaId: listaId
+        };
+        
+        console.log('Enviando payload:', payload);
+        
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            console.log('Status:', res.status);
+            return res.json();
+        })
+        .then(data => {
+            console.log('Tareas recibidas:', data);
+            if (data.tasks) {
+                tareas = data.tasks;
+                console.log('Total tareas cargadas:', tareas.length);
+                renderTareasList();
+            } else {
+                console.error('No hay propiedad tasks en respuesta:', data);
+            }
+        })
+        .catch(e => {
+            console.error('Error cargando tareas:', e);
+        });
+    }
+    
+    function saveTarea(event) {
+        event.preventDefault();
+        const desc = document.getElementById('taskDesc').value.trim();
+        const prioridad = document.getElementById('taskPriority').value;
+        
+        if (!desc) {
+            showNotification('warning', 'Campos Requeridos', 'Completa la descripción');
+            return;
+        }
+        
+        const btn = event.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = '⏳ Agregando...';
+        
+        const payload = {
+            action: 'save_task',
+            listaId: listaActualId,
+            descripcion: desc,
+            prioridad: prioridad
+        };
+        
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', 'Tarea Creada', '✅');
+                document.getElementById('taskDesc').value = '';
+                
+                // Agregar la tarea localmente
+                const newTarea = {
+                    id: Date.now(),
+                    listaId: listaActualId,
+                    descripcion: desc,
+                    prioridad: prioridad,
+                    completada: false,
+                    fechaCreacion: new Date().toISOString()
+                };
+                tareas.push(newTarea);
+                renderTareasList();
+            } else {
+                showNotification('error', 'Error', data.error);
+            }
+            btn.disabled = false;
+            btn.textContent = '➕ Agregar Tarea';
+        })
+        .catch(e => {
+            showNotification('error', 'Error', e.message);
+            btn.disabled = false;
+            btn.textContent = '➕ Agregar Tarea';
+        });
+    }
+    
+    function renderTareasList() {
+        const container = document.getElementById('tasksList');
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        
+        // Separar tareas completadas y pendientes
+        const tareasPendientes = tareas.filter(t => !t.completada);
+        const tareasCompletadas = tareas.filter(t => t.completada);
+        
+        // Calcular prioridad por días desde creación
+        const tareasOrdenadas = tareasPendientes.map(tarea => {
+            const fechaCreacion = new Date(tarea.fechaCreacion);
+            fechaCreacion.setHours(0, 0, 0, 0);
+            const diasDesdeCreacion = Math.floor((hoy - fechaCreacion) / (1000 * 60 * 60 * 24));
+            
+            // Si pasaron más de 5 días, prioridad máxima
+            let prioridadFinal = tarea.prioridad;
+            let diasMostrar = diasDesdeCreacion;
+            
+            if (diasDesdeCreacion > 5) {
+                prioridadFinal = 'vencida';
+            }
+            
+            return { ...tarea, prioridadFinal, diasDesdeCreacion };
+        });
+        
+        // Ordenar por prioridad
+        tareasOrdenadas.sort((a, b) => {
+            const orden = { vencida: 0, rojo: 1, amarillo: 2, verde: 3 };
+            return orden[a.prioridadFinal] - orden[b.prioridadFinal];
+        });
+        
+        if (tareasPendientes.length === 0) {
+            container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary);">No hay tareas pendientes</div>';
+        } else {
+            container.innerHTML = tareasOrdenadas.map(tarea => {
+                const color = tarea.prioridadFinal === 'vencida' ? '#FF6B6B' : 
+                             (tarea.prioridadFinal === 'rojo' ? '#FF9800' : 
+                             (tarea.prioridadFinal === 'amarillo' ? '#FFC107' : '#4CAF50'));
+                const icon = tarea.prioridadFinal === 'vencida' ? '⚠️' : 
+                            (tarea.prioridadFinal === 'rojo' ? '🔴' : 
+                            (tarea.prioridadFinal === 'amarillo' ? '🟡' : '🟢'));
+                const label = tarea.prioridadFinal === 'vencida' ? `VENCIDA (${tarea.diasDesdeCreacion} días)` : 
+                             (tarea.prioridadFinal === 'rojo' ? 'Alta' : 
+                             (tarea.prioridadFinal === 'amarillo' ? 'Media' : 'Baja'));
+                
+                return `
+                    <div class="record-item" style="border-left-color: ${color}; margin-bottom: 10px; display: flex; gap: 10px;">
+                        <input type="checkbox" onchange="completarTarea('${tarea.id}')" style="margin: auto 0; width: 20px; height: 20px; cursor: pointer;">
+                        <div style="flex: 1;">
+                            <div class="record-info">
+                                <div class="record-client-name">${icon} ${tarea.descripcion}</div>
+                                <div class="record-meta" style="color: ${color}; font-weight: 700;">${label} • ${new Date(tarea.fechaCreacion).toLocaleDateString('es-ES')}</div>
+                            </div>
+                        </div>
+                        <div class="record-actions">
+                            <button class="action-btn delete" onclick="deleteTarea('${tarea.id}')" title="Eliminar">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Renderizar tareas completadas si las hay
+        const completedSection = document.getElementById('tasksCompletedSection');
+        const completedCount = document.getElementById('completedCount');
+        const completedList = document.getElementById('tasksCompletedList');
+        
+        if (tareasCompletadas.length > 0) {
+            completedSection.style.display = 'block';
+            completedCount.textContent = `${tareasCompletadas.length} elementos completados`;
+            completedList.innerHTML = tareasCompletadas.map(tarea => `
+                <div class="record-item" style="opacity: 0.6; text-decoration: line-through; margin-bottom: 8px; display: flex; gap: 10px;">
+                    <input type="checkbox" checked onchange="descompletarTarea('${tarea.id}')" style="margin: auto 0; width: 20px; height: 20px; cursor: pointer;">
+                    <div style="flex: 1;">
+                        <div class="record-info">
+                            <div class="record-client-name">✅ ${tarea.descripcion}</div>
+                            <div class="record-meta" style="font-size: 0.8rem;">${new Date(tarea.fechaCreacion).toLocaleDateString('es-ES')}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            completedSection.style.display = 'none';
+        }
+    }
+    
+    function toggleCompleted() {
+        const list = document.getElementById('tasksCompletedList');
+        const icon = document.getElementById('completedToggleIcon');
+        const isHidden = list.style.display === 'none';
+        list.style.display = isHidden ? 'block' : 'none';
+        icon.textContent = isHidden ? '▼️' : '▶️';
+    }
+    
+    function completarTarea(tareaId) {
+        console.log('Completando tarea:', tareaId);
+        
+        const payload = {
+            action: 'update_task',
+            id: tareaId,
+            completada: true
+        };
+        
+        // Actualizar localmente de inmediato (optimistic update)
+        const tareaIdx = tareas.findIndex(t => t.id === tareaId);
+        if (tareaIdx !== -1) {
+            tareas[tareaIdx].completada = true;
+            renderTareasList();
+            console.log('Tarea actualizada localmente');
+        }
+        
+        // Guardar en Google Sheets en background
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            console.log('Status del servidor:', res.status);
+            return res.json();
+        })
+        .then(data => {
+            console.log('Respuesta del servidor:', data);
+            if (!data.success) {
+                // Si falla, revertir
+                console.error('Error en respuesta:', data);
+                if (tareaIdx !== -1) {
+                    tareas[tareaIdx].completada = false;
+                    renderTareasList();
+                }
+                showNotification('error', 'Error', data.error || 'No se pudo guardar en el servidor');
+            } else {
+                console.log('Tarea completada correctamente en servidor');
+            }
+        })
+        .catch(e => {
+            console.error('Error de conexión:', e);
+            if (tareaIdx !== -1) {
+                tareas[tareaIdx].completada = false;
+                renderTareasList();
+            }
+            showNotification('error', 'Error de conexión', e.message);
+        });
+    }
+    
+    function descompletarTarea(tareaId) {
+        console.log('Descompletando tarea:', tareaId);
+        
+        const payload = {
+            action: 'update_task',
+            id: tareaId,
+            completada: false
+        };
+        
+        // Actualizar localmente de inmediato (optimistic update)
+        const tareaIdx = tareas.findIndex(t => t.id === tareaId);
+        if (tareaIdx !== -1) {
+            tareas[tareaIdx].completada = false;
+            renderTareasList();
+            console.log('Tarea actualizada localmente');
+        }
+        
+        // Guardar en Google Sheets en background
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            console.log('Status del servidor:', res.status);
+            return res.json();
+        })
+        .then(data => {
+            console.log('Respuesta del servidor:', data);
+            if (!data.success) {
+                // Si falla, revertir
+                console.error('Error en respuesta:', data);
+                if (tareaIdx !== -1) {
+                    tareas[tareaIdx].completada = true;
+                    renderTareasList();
+                }
+                showNotification('error', 'Error', data.error || 'No se pudo guardar en el servidor');
+            } else {
+                console.log('Tarea descompletada correctamente en servidor');
+            }
+        })
+        .catch(e => {
+            console.error('Error de conexión:', e);
+            if (tareaIdx !== -1) {
+                tareas[tareaIdx].completada = true;
+                renderTareasList();
+            }
+            showNotification('error', 'Error de conexión', e.message);
+        });
+    }
+    
+    
+    function editList(listaId) {
+        const nuevoNombre = prompt('Nuevo nombre para la lista:');
+        if (!nuevoNombre || !nuevoNombre.trim()) return;
+        
+        const payload = {
+            action: 'update_list',
+            id: listaId,
+            nombre: nuevoNombre.trim()
+        };
+        
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', 'Lista actualizada', '✏️');
+                
+                // Actualizar localmente
+                const listaIdx = listas.findIndex(l => l.id === listaId);
+                if (listaIdx !== -1) {
+                    listas[listaIdx].nombre = nuevoNombre.trim();
+                    loadListas();
+                    renderTasksView();
+                }
+            } else {
+                showNotification('error', 'Error', data.error);
+            }
+        })
+        .catch(e => showNotification('error', 'Error', e.message));
+    }
+    
+    function deleteTarea(tareaId) {
+        if (!confirm('¿Estás seguro de eliminar esta tarea?')) return;
+        
+        const payload = {
+            action: 'delete_task',
+            id: tareaId
+        };
+        
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', 'Tarea Eliminada', '🗑️');
+                
+                // Eliminar la tarea localmente
+                tareas = tareas.filter(t => t.id !== tareaId);
+                renderTareasList();
+            } else {
+                showNotification('error', 'Error', data.error);
+            }
+        })
+        .catch(e => showNotification('error', 'Error', e.message));
+    }
+
+    // Calcular horas FACTURABLES (incluye normales + AMV, excluye ABONADOS)
+    function getHorasFacturables(dayData) {
+        return dayData
+            .filter(r => !esAbonado(r.proyectoId))  // Excluye solo ABONADOS
+            .reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+    }
+
+    // Calcular horas ABONADAS (solo Abonados - no facturan)
+    function getHorasAbonadas(dayData) {
+        return dayData
+            .filter(r => esAbonado(r.proyectoId))
+            .reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+    }
+
+    // Calcular horas AMV (facturables a mes vencido)
+    function getHorasAMV(dayData) {
+        return dayData
+            .filter(r => esAMV(r.proyectoId))
+            .reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+    }
+
+    // Calcular TODAS las horas
+    function getHorasTotales(dayData) {
+        return dayData.reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+    }
+
+    // Obtener clase de color basada en horas facturables (normales + AMV)
+    function getHoursClass(horasFacturables) {
+        if (horasFacturables >= 8) return 'high';      // Verde: 8+ horas facturables
+        else if (horasFacturables >= 5) return 'medium'; // Amarillo: 5-7 horas facturables
+        else if (horasFacturables > 0) return 'low';     // Rojo: 1-4 horas facturables
+        return '';
+    }
+    
+    // GESTIÓN DEL MODAL DEL DÍA
+    function openDayModal(dateStr) {
+        const overlay = document.getElementById('dayModal');
+        const list = document.getElementById('modalList');
+        const title = document.getElementById('modalTitle');
+        
+        // Filtramos solo los registros de ese día
+        const dayData = timeRecords.filter(r => r.fecha === dateStr);
+        
+        title.innerText = `Detalle del ${dateStr.split('-').reverse().join('/')}`;
+        
+        if (dayData.length === 0) {
+            list.innerHTML = '<p style="text-align:center; padding:30px; font-size:1.1rem;">No hay horas cargadas este día.</p>';
+        } else {
+            list.innerHTML = dayData.map(r => generateRecordHTML(r)).join('');
+        }
+
+        overlay.style.display = 'flex';
+        setTimeout(() => overlay.classList.add('open'), 10);
+    }
+
+    function closeDayModal() {
+        const overlay = document.getElementById('dayModal');
+        overlay.classList.remove('open');
+        setTimeout(() => overlay.style.display = 'none', 300);
+    }
+
+    // Cerrar modal si se clickea afuera
+    document.getElementById('dayModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDayModal();
+    });
+
+    // Cerrar modal de edición si se clickea afuera
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditModal();
+    });
+
+    // Listener para mostrar/ocultar input manual de consultor en formulario principal
+    document.getElementById('consultant').addEventListener('change', function() {
+        const manualInput = document.getElementById('consultantManual');
+        if (this.value === 'OTRO') {
+            manualInput.style.display = 'block';
+            manualInput.focus();
+        } else {
+            manualInput.style.display = 'none';
+            manualInput.value = '';
+        }
+    });
+
+    // Listener para mostrar/ocultar input manual de consultor en modal
+    document.getElementById('editModalConsultant').addEventListener('change', function() {
+        const manualInput = document.getElementById('editModalConsultantManual');
+        if (this.value === 'OTRO') {
+            manualInput.style.display = 'block';
+            manualInput.focus();
+        } else {
+            manualInput.style.display = 'none';
+            manualInput.value = '';
+        }
+    });
+
+
+    // OPERACIONES DE DATOS (CRUD)
+    
+    // ENVÍO DE HORAS
+    document.getElementById('timeForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true; btn.innerText = 'GUARDANDO...';
+        
+        const consultantValue = document.getElementById('consultant').value;
+        const consultant = consultantValue === 'OTRO' ? document.getElementById('consultantManual').value : consultantValue;
+        
+        const horasAAgregar = parseFloat(document.getElementById('hours').value) || 0;
+        const projectId = document.getElementById('project').value;
+        
+        // Verificar si se exceden las horas
+        let mostrarAlertaExcedida = false;
+        if (projectId) {
+            const proyecto = proyectos.find(p => p.id.toString() === projectId.toString());
+            if (proyecto) {
+                const horasRestantes = proyecto.horasEstimadas - horasAAgregar;
+                if (horasRestantes < 0) {
+                    mostrarAlertaExcedida = true;
+                }
+            }
+        }
+        
+        const payload = {
+            id: document.getElementById('editId').value,
+            action: document.getElementById('editId').value ? "edit" : "save_hours",
+            date: document.getElementById('date').value,
+            client: document.getElementById('client').value === 'OTRO' ? document.getElementById('clientManual').value.toUpperCase() : document.getElementById('client').value,
+            requester: document.getElementById('requester').value === 'OTRO' ? document.getElementById('requesterManual').value : document.getElementById('requester').value,
+            hours: document.getElementById('hours').value,
+            type: document.getElementById('type').value,
+            description: document.getElementById('billingDesc').value,
+            consultor: consultant,
+            proyectoId: projectId
+        };
+
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            
+            if (mostrarAlertaExcedida) {
+                showNotification('warning', '⚠️ Se Pasó de Horas', 'Se registraron más horas de las estimadas en el proyecto', 4000);
+            } else {
+                showNotification('success', 'Horas Guardadas', 'El registro se ha guardado exitosamente', 2000);
+            }
+            
+            cancelEdit();
+            await loadData();
+        } catch(e) { 
+            showNotification('error', 'Error', 'No se pudieron guardar las horas', 4000);
+        }
+        btn.disabled = false; btn.innerText = 'Guardar Horas ✔';
+    };
+
+    // ENVÍO DE PROYECTO
+    document.getElementById('projectForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('projBtn');
+        btn.disabled = true; btn.innerText = 'CREANDO...';
+
+        const payload = {
+            action: "save_project",
+            client: document.getElementById('projectClient').value === 'OTRO' ? document.getElementById('projectClientManual').value.toUpperCase() : document.getElementById('projectClient').value,
+            hoursRemote: document.getElementById('projectHoursRemote').value,
+            hoursOnSite: document.getElementById('projectHoursOnSite').value,
+            deliveryDate: document.getElementById('projectDeadline').value,
+            description: document.getElementById('projectDesc').value
+        };
+
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            showNotification('success', 'Proyecto Creado', '🚀 El proyecto se ha creado exitosamente', 3000);
+            this.reset();
+            loadData();
+        } catch(e) { 
+            showNotification('error', 'Error', 'No se pudo crear el proyecto', 4000);
+        }
+        btn.disabled = false; btn.innerText = 'Crear Proyecto 🚀';
+    };
+
+    // FUNCIONES DE EDICIÓN Y BORRADO (Compatibles con el Modal)
+    function prepareEditFromRecord(id) {
+        console.log('=== EDICIÓN INICIADA ===');
+        console.log('ID pasado:', id);
+        
+        prepareEdit(id);
+    }
+    
+    function deleteRecordFromRecord(id) {
+        console.log('deleteRecordFromRecord called with:', id);
+        deleteRecord(id);
+    }
+
+    function prepareEdit(idInput) {
+        console.log('prepareEdit called with ID:', idInput);
+        console.log('Tipo:', typeof idInput);
+        
+        // Cerrar modal del día
+        closeDayModal();
+        
+        // Buscar por ID directo - es lo más seguro
+        let r = null;
+        const searchId = String(idInput).trim();
+        
+        console.log('Buscando registro con ID:', searchId);
+        console.log('Total de registros disponibles:', timeRecords.length);
+        
+        for (let i = 0; i < timeRecords.length; i++) {
+            const recordId = String(timeRecords[i].id).trim();
+            if (recordId === searchId) {
+                r = timeRecords[i];
+                console.log('✓ Registro encontrado en índice:', i);
+                console.log('Registro:', r);
+                break;
+            }
+        }
+        
+        if (!r) {
+            console.error('Registro NO encontrado buscando por ID:', searchId);
+            // Si no encuentra por ID, intenta por la combinación antigua
+            console.log('Intentando buscar por combinación única...');
+            
+            if (!String(searchId).match(/^\d+$/)) {
+                const decodedId = decodeURIComponent(searchId);
+                const [cliente, fecha, solicitante, horas, tipo] = decodedId.split('|');
+                
+                for (let i = 0; i < timeRecords.length; i++) {
+                    const rec = timeRecords[i];
+                    if (rec.cliente === cliente && 
+                        rec.fecha === fecha && 
+                        rec.solicitante === solicitante && 
+                        String(rec.horas) === horas && 
+                        (rec.tipo || 'Remoto') === tipo) {
+                        r = rec;
+                        console.log('✓ Registro encontrado por combinación en índice:', i);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (!r) {
+            console.error('Registro no encontrado:', searchId);
+            showNotification('error', 'Error', 'No se encontró el registro');
+            return;
+        }
+        
+        console.log('=== REGISTRO SELECCIONADO ===');
+        console.log('Cliente:', r.cliente);
+        console.log('Fecha:', r.fecha);
+        console.log('Solicitante:', r.solicitante);
+        console.log('Horas:', r.horas);
+        console.log('Proyecto ID:', r.proyectoId);
+        console.log('ID en sistema:', r.id);
+        
+        // Pequeño delay para permitir que se cierre el modal anterior
+        setTimeout(() => {
+            // Llenar modal de edición
+            document.getElementById('editModalId').value = r.id;  // ID real de Google Sheets
+            document.getElementById('editModalDate').value = r.fecha;
+            document.getElementById('editModalClient').value = r.cliente;
+            document.getElementById('editModalRequester').value = r.solicitante;
+            document.getElementById('editModalHours').value = r.horas;
+            document.getElementById('editModalType').value = r.tipo || 'Remoto';
+            document.getElementById('editModalDesc').value = r.descripcion || '';
+            
+            console.log('ID guardado en modal:', r.id);
+            console.log('Tipo de ID:', typeof r.id);
+            
+            // Cargar consultor
+            const consultantSelect = document.getElementById('editModalConsultant');
+            const consultantManual = document.getElementById('editModalConsultantManual');
+            
+            consultantManual.style.display = 'none';
+            consultantManual.value = '';
+            
+            if (r.consultor) {
+                if (r.consultor === 'Martín Serati' || r.consultor === 'Guido Chaparro') {
+                    consultantSelect.value = r.consultor;
+                } else {
+                    consultantSelect.value = 'OTRO';
+                    consultantManual.value = r.consultor;
+                    consultantManual.style.display = 'block';
+                }
+            } else {
+                consultantSelect.value = '';
+            }
+            
+            // Cargar proyecto
+            const projectSelect = document.getElementById('editModalProject');
+            console.log('=== CARGANDO PROYECTOS EN MODAL ===');
+            console.log('Cargando proyectos. Total disponibles:', proyectos.length);
+            console.log('ID del proyecto a buscar:', r.proyectoId);
+            console.log('Tipo del ID del proyecto:', typeof r.proyectoId);
+            console.log('¿Está vacío?', !r.proyectoId || r.proyectoId === "");
+            
+            // Construir opciones: primero "Sin proyecto", luego especiales, luego normales
+            let projectOptions = '<option value="">Sin proyecto</option>';
+            
+            // Agregar proyectos especiales
+            projectOptions += Object.values(proyectosEspeciales).map(p => {
+                const isSelected = r.proyectoId === p.id;
+                console.log(`Especial: ${p.id} === ${r.proyectoId} ? ${isSelected}`);
+                return `<option value="${p.id}" ${isSelected ? 'selected' : ''}>${p.descripcion}</option>`;
+            }).join('');
+            
+            // Agregar proyectos normales
+            projectOptions += proyectos.map(p => {
+                const isSelected = r.proyectoId === String(p.id) || String(r.proyectoId) === String(p.id);
+                console.log(`Normal: ${p.id} (${typeof p.id}) === ${r.proyectoId} (${typeof r.proyectoId}) ? ${isSelected}`);
+                return `<option value="${p.id}" ${isSelected ? 'selected' : ''}>${p.cliente} - ${p.descripcion || 'Sin descripción'}</option>`;
+            }).join('');
+            
+            projectSelect.innerHTML = projectOptions;
+            console.log('Proyecto seleccionado en modal:', projectSelect.value);
+            console.log('=== FIN CARGA PROYECTOS ===');
+            
+            // Abrir modal
+            document.getElementById('editModal').classList.add('open');
+            
+            // Guardar los datos originales DESPUÉS de cargar todo en el modal
+            setTimeout(() => {
+                guardarDatosOriginales();
+            }, 100);
+        }, 50);
+    }
+    
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('open');
+    }
+    
+    function closeEditSolicitanteModal() {
+        document.getElementById('editSolicitanteModal').classList.remove('open');
+    }
+    
+    function abrirEditarSolicitante(solicitanteActual) {
+        abrirEditarSolicitanteDesdeDropdown(solicitanteActual);
+    }
+    
+    function mostrarSolicitantesParaEditar() {
+        const solicitantes = [...new Set(timeRecords.map(r => r.solicitante).filter(Boolean))].sort();
+        
+        if (solicitantes.length === 0) {
+            showNotification('info', 'Sin Solicitantes', 'No hay solicitantes registrados');
+            return;
+        }
+        
+        const opciones = solicitantes.map(s => `<button onclick="abrirEditarSolicitanteDesdeDropdown('${s}')" style="display: block; width: 100%; text-align: left; padding: 10px; margin: 5px 0; background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 0.95rem;">✏️ ${s}</button>`).join('');
+        
+        showNotification('info', 'Selecciona un Solicitante para Editar', opciones, 0);
+    }
+    
+    function abrirEditarSolicitanteDesdeDropdown(solicitanteActual) {
+        document.getElementById('solicitanteActual').value = solicitanteActual;
+        document.getElementById('solicitanteNuevo').value = '';
+        document.getElementById('editSolicitanteModal').classList.add('open');
+    }
+    
+    function abrirEditarSolicitanteDesdeModal() {
+        const solicitanteActual = document.getElementById('editModalRequester').value;
+        if (!solicitanteActual.trim()) {
+            showNotification('warning', 'Campo Requerido', 'Primero selecciona un solicitante');
+            return;
+        }
+        abrirEditarSolicitanteDesdeDropdown(solicitanteActual);
+    }
+    
+    // Manejar envío del formulario de editar solicitante
+    document.getElementById('editSolicitanteForm').onsubmit = async function(e) {
+        e.preventDefault();
+        
+        const solicitanteActual = document.getElementById('solicitanteActual').value;
+        const solicitanteNuevo = document.getElementById('solicitanteNuevo').value;
+        
+        if (!solicitanteNuevo.trim()) {
+            showNotification('warning', 'Campo Requerido', 'Ingresa el nuevo nombre del solicitante');
+            return;
+        }
+        
+        // Actualizar todos los registros con el solicitante antiguo
+        const registrosActualizados = timeRecords.map(r => {
+            if (r.solicitante === solicitanteActual) {
+                return {...r, solicitante: solicitanteNuevo};
+            }
+            return r;
+        });
+        
+        // Aquí iría la lógica para guardar en el servidor si es necesario
+        // Por ahora, solo actualizamos localmente
+        timeRecords = registrosActualizados;
+        
+        showNotification('success', 'Solicitante Actualizado', `Todos los registros con "${solicitanteActual}" ahora dicen "${solicitanteNuevo}"`, 3000);
+        
+        closeEditSolicitanteModal();
+        renderList();
+        populateFilters();
+    };
+    
+    // Guardar datos originales cuando se abre el modal de edición
+    let datosOriginales = {};
+    
+    function guardarDatosOriginales() {
+        datosOriginales = {
+            fecha: document.getElementById('editModalDate').value,
+            cliente: document.getElementById('editModalClient').value,
+            solicitante: document.getElementById('editModalRequester').value,
+            horas: document.getElementById('editModalHours').value,
+            tipo: document.getElementById('editModalType').value,
+            descripcion: document.getElementById('editModalDesc').value,
+            consultor: document.getElementById('editModalConsultant').value,
+            consultorManual: document.getElementById('editModalConsultantManual').value,
+            proyecto: document.getElementById('editModalProject').value
+        };
+        console.log('Datos originales guardados:', datosOriginales);
+    }
+    
+    function hayChanges() {
+        const datosActuales = {
+            fecha: document.getElementById('editModalDate').value,
+            cliente: document.getElementById('editModalClient').value,
+            solicitante: document.getElementById('editModalRequester').value,
+            horas: document.getElementById('editModalHours').value,
+            tipo: document.getElementById('editModalType').value,
+            descripcion: document.getElementById('editModalDesc').value,
+            consultor: document.getElementById('editModalConsultant').value,
+            consultorManual: document.getElementById('editModalConsultantManual').value,
+            proyecto: document.getElementById('editModalProject').value
+        };
+        
+        const cambios = JSON.stringify(datosOriginales) !== JSON.stringify(datosActuales);
+        console.log('¿Hay cambios?', cambios);
+        if (cambios) {
+            console.log('Datos actuales:', datosActuales);
+        }
+        return cambios;
+    }
+
+    // Manejar envío del formulario de edición modal
+    document.getElementById('editModalForm').onsubmit = async function(e) {
+        e.preventDefault();
+        
+        // Verificar si hay cambios reales
+        if (!hayChanges()) {
+            console.log('No hay cambios, cancelando envío');
+            showNotification('warning', 'Sin Cambios', 'No realizaste ninguna modificación', 2000);
+            closeEditModal();
+            return;
+        }
+        
+        let id = document.getElementById('editModalId').value;
+        
+        console.log('=== ENVIANDO EDICIÓN ===');
+        console.log('ID a enviar (inicial):', id);
+        console.log('Tipo de ID:', typeof id);
+        console.log('ID length:', String(id).length);
+        console.log('ID es solo números?', String(id).match(/^\d+$/));
+        
+        // Si el ID es una combinación encoded, buscar el registro real para obtener su ID
+        if (!String(id).match(/^\d+$/) && id.includes('%7C')) {
+            console.log('ID es una combinación encoded, buscando registro real...');
+            const decodedId = decodeURIComponent(id);
+            const [cliente, fecha, solicitante, horas, tipo] = decodedId.split('|');
+            
+            for (let i = 0; i < timeRecords.length; i++) {
+                const rec = timeRecords[i];
+                if (rec.cliente === cliente && 
+                    rec.fecha === fecha && 
+                    rec.solicitante === solicitante && 
+                    String(rec.horas) === horas && 
+                    (rec.tipo || 'Remoto') === tipo) {
+                    id = rec.id;
+                    console.log('✓ ID real encontrado:', id);
+                    break;
+                }
+            }
+        }
+        
+        console.log('ID FINAL a enviar:', id);
+        console.log('Todos los IDs en timeRecords:', timeRecords.map(r => String(r.id).trim()));
+        
+        const consultantValue = document.getElementById('editModalConsultant').value;
+        const consultant = consultantValue === 'OTRO' ? document.getElementById('editModalConsultantManual').value : consultantValue;
+        
+        const payload = {
+            id: id,
+            action: "edit",
+            date: document.getElementById('editModalDate').value,
+            client: document.getElementById('editModalClient').value,
+            requester: document.getElementById('editModalRequester').value,
+            hours: document.getElementById('editModalHours').value,
+            type: document.getElementById('editModalType').value,
+            description: document.getElementById('editModalDesc').value,
+            consultor: consultant,
+            proyectoId: document.getElementById('editModalProject').value || ""
+        };
+        
+        console.log('Payload completo:', payload);
+        console.log('=== ENVIANDO AL SERVIDOR ===');
+
+        try {
+            const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await response.json();
+            console.log('Respuesta del servidor:', result);
+            
+            if (!result.success) {
+                console.error('El servidor devolvió error:', result.error);
+                showNotification('error', 'Error', result.error || 'No se pudo actualizar el registro', 4000);
+                return;
+            }
+            
+            closeEditModal();
+            showNotification('success', 'Registro Actualizado', 'Los cambios se han guardado exitosamente', 3000);
+            await loadData();
+        } catch(e) { 
+            console.error('Error en la solicitud:', e);
+            showNotification('error', 'Error', 'No se pudo actualizar el registro', 4000);
+        }
+    };
+
+    function cancelEdit() {
+        document.getElementById('timeForm').reset();
+        document.getElementById('editId').value = "";
+        document.getElementById('submitBtn').innerText = "Guardar Horas ✔";
+        document.getElementById('cancelBtn').style.display = "none";
+        
+        // Establecer la fecha a hoy
+        document.getElementById('date').valueAsDate = new Date();
+    }
+
+    function deleteRecord(idInput) {
+        closeDayModal(); // Cerramos el modal
+        
+        let r = null;
+        
+        // Si es un ID numérico, buscar directamente
+        if (String(idInput).match(/^\d+$/)) {
+            r = timeRecords.find(x => String(x.id).trim() === String(idInput).trim());
+        } else {
+            // Es una combinación única, decodificar
+            const decodedId = decodeURIComponent(idInput);
+            const [cliente, fecha, solicitante, horas, tipo] = decodedId.split('|');
+            
+            for (let i = 0; i < timeRecords.length; i++) {
+                const rec = timeRecords[i];
+                if (rec.cliente === cliente && 
+                    rec.fecha === fecha && 
+                    rec.solicitante === solicitante && 
+                    String(rec.horas) === horas && 
+                    (rec.tipo || 'Remoto') === tipo) {
+                    r = rec;
+                    break;
+                }
+            }
+        }
+        
+        if (!r) {
+            showNotification('error', 'Error', 'No se encontró el registro para eliminar');
+            return;
+        }
+        
+        showNotification('confirm', '⚠️ Eliminar Registro', '¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.', 0, [
+            {
+                text: 'Confirmar',
+                class: 'confirm',
+                callback: async () => {
+                    const ss = document.getElementById('syncStatus');
+                    ss.style.display = 'block'; 
+                    ss.innerText = "Eliminando...";
+                    
+                    try {
+                        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "delete", id: r.id }) });
+                        await loadData();
+                        showNotification('success', 'Registro Eliminado', 'El registro ha sido eliminado correctamente', 3000);
+                    } catch(e) { 
+                        showNotification('error', 'Error', 'No se pudo eliminar el registro', 4000);
+                    }
+                }
+            },
+            {
+                text: 'Cancelar',
+                class: 'cancel',
+                callback: () => {
+                    // No hacer nada, solo cerrar
+                }
+            }
+        ]);
+    }
+
+    function handlePreviewPDF() {
+        try {
+            const reportType = document.getElementById('reportType').value;
+            
+            if (!reportType) {
+                showNotification('warning', 'Tipo de Reporte', 'Selecciona un tipo de reporte');
+                return;
+            }
+            
+            if (reportType === 'horas') {
+                const cli = document.getElementById('reportHorasCliente').value;
+                const mesFrom = document.getElementById('reportHorasMesFrom').value;
+                const mesTo = document.getElementById('reportHorasMesTo').value;
+                
+                if (!cli) {
+                    showNotification('warning', 'Cliente Requerido', 'Debes seleccionar un cliente');
+                    return;
+                }
+                if (!mesFrom || !mesTo) {
+                    showNotification('warning', 'Rango de Meses Requerido', 'Debes seleccionar un rango de meses');
+                    return;
+                }
+                
+                previewPDFHoras(cli, mesFrom, mesTo);
+            } else if (reportType === 'proyecto') {
+                const proyectoId = document.getElementById('reportProyecto').value;
+                if (!proyectoId) {
+                    showNotification('warning', 'Proyecto Requerido', 'Debes seleccionar un proyecto para generar el reporte');
+                    return;
+                }
+                previewPDFProyecto(proyectoId);
+            } else if (reportType === 'amv') {
+                const mesFrom = document.getElementById('reportAMVMesFrom').value;
+                const mesTo = document.getElementById('reportAMVMesTo').value;
+                const cliente = document.getElementById('reportAMVCliente').value;
+                if (!mesFrom || !mesTo) {
+                    showNotification('warning', 'Rango de Meses Requerido', 'Debes seleccionar un rango de meses');
+                    return;
+                }
+                previewPDFAMV(mesFrom, mesTo, cliente);
+            }
+        } catch(e) {
+            console.error("Error en handlePreviewPDF:", e);
+            showNotification('error', 'Error', e.message, 4000);
+        }
+    }
+
+    function handleGeneratePDF() {
+        try {
+            const reportType = document.getElementById('reportType').value;
+            
+            if (!reportType) {
+                showNotification('warning', 'Tipo de Reporte', 'Selecciona un tipo de reporte');
+                return;
+            }
+            
+            if (reportType === 'horas') {
+                const cli = document.getElementById('reportHorasCliente').value;
+                const mesFrom = document.getElementById('reportHorasMesFrom').value;
+                const mesTo = document.getElementById('reportHorasMesTo').value;
+                
+                if (!cli) {
+                    showNotification('warning', 'Cliente Requerido', 'Debes seleccionar un cliente');
+                    return;
+                }
+                if (!mesFrom || !mesTo) {
+                    showNotification('warning', 'Rango de Meses Requerido', 'Debes seleccionar un rango de meses');
+                    return;
+                }
+                
+                generatePDFHoras(cli, mesFrom, mesTo, false);
+            } else if (reportType === 'proyecto') {
+                const proyectoId = document.getElementById('reportProyecto').value;
+                if (!proyectoId) {
+                    showNotification('warning', 'Proyecto Requerido', 'Debes seleccionar un proyecto para generar el reporte');
+                    return;
+                }
+                generatePDFProyecto(proyectoId, false);
+            } else if (reportType === 'amv') {
+                const mesFrom = document.getElementById('reportAMVMesFrom').value;
+                const mesTo = document.getElementById('reportAMVMesTo').value;
+                const cliente = document.getElementById('reportAMVCliente').value;
+                if (!mesFrom || !mesTo) {
+                    showNotification('warning', 'Rango de Meses Requerido', 'Debes seleccionar un rango de meses');
+                    return;
+                }
+                generatePDFAMV(mesFrom, mesTo, cliente, false);
+            }
+        } catch(e) {
+            console.error("Error en handleGeneratePDF:", e);
+            showNotification('error', 'Error', e.message, 4000);
+        }
+    }
+
+    function previewPDFHoras(clienteName, mesFrom, mesTo) {
+        generatePDFHoras(clienteName, mesFrom, mesTo, true);
+    }
+
+    function previewPDFProyecto(proyectoId) {
+        // Llamar a generatePDFProyecto con flag preview = true
+        generatePDFProyecto(proyectoId, true);
+    }
+
+    function previewPDFAMV(mesFrom, mesTo, cliente) {
+        // Llamar a generatePDFAMV con flag preview = true
+        generatePDFAMV(mesFrom, mesTo, cliente, true);
+    }
+
+    function generatePDFAMV(mesFrom, mesTo, cliente, preview = false) {
+        try {
+            // Filtrar solo registros AMV dentro del rango de meses
+            const dataAMV = timeRecords.filter(r => {
+                if (!r.fecha || !esAMV(r.proyectoId)) return false;
+                const p = r.fecha.split('-');
+                const rMonth = p[1];
+                
+                // Filtrar por cliente si está seleccionado
+                if (cliente && r.cliente !== cliente) return false;
+                
+                // Incluir registros dentro del rango de meses
+                if (mesFrom && mesTo) {
+                    return rMonth >= mesFrom && rMonth <= mesTo;
+                }
+                return true;
+            }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            if (dataAMV.length === 0) {
+                showNotification('warning', 'Sin Registros', 'No hay registros AMV en el rango de meses seleccionado');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // ENCABEZADO PRINCIPAL
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(24);
+            doc.setTextColor(227, 6, 19); // Rojo CONE
+            doc.text(`CONE`, 14, 15);
+            
+            // SUBTÍTULO
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            doc.setTextColor(26, 26, 26); // Negro
+            doc.text(`Consultora de Negocios Empresarios S.R.L.`, 14, 24);
+            
+            // LÍNEA SEPARADORA
+            doc.setLineWidth(0.5);
+            doc.setDrawColor(227, 6, 19);
+            doc.line(14, 27, 196, 27);
+            
+            // TÍTULO DEL REPORTE
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.setTextColor(227, 6, 19);
+            doc.text(`HORAS AMV (A MES VENCIDO)`, 14, 35);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(26, 26, 26);
+            const meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            doc.text(`Período: ${meses[parseInt(mesFrom)]} - ${meses[parseInt(mesTo)]}`, 14, 42);
+            if (cliente) {
+                doc.text(`Cliente: ${cliente}`, 14, 48);
+                doc.text(`Fecha Reporte: ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}`, 14, 54);
+            } else {
+                doc.text(`Fecha Reporte: ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}`, 14, 48);
+            }
+            
+            // TABLA (Fecha, Cliente, Descripción, Consultor, Horas)
+            const tableData = dataAMV.map(r => [
+                r.fecha.split('-').reverse().join('/'),
+                r.cliente || '-',
+                r.descripcion || '-',
+                r.consultor || '-',
+                `${r.horas}h`
+            ]);
+            
+            const startY = cliente ? 60 : 54;
+            
+            doc.autoTable({
+                startY: startY,
+                head: [['Fecha', 'Cliente', 'Descripción', 'Consultor', 'Horas']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { 
+                    fillColor: [227, 6, 19],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    fontSize: 11,
+                    halign: 'center'
+                },
+                bodyStyles: { fontSize: 10 },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
+                columnStyles: {
+                    0: { cellWidth: 22, halign: 'center' },
+                    1: { cellWidth: 32 },
+                    2: { cellWidth: 70 },
+                    3: { cellWidth: 35 },
+                    4: { cellWidth: 18, halign: 'right', fontStyle: 'bold' }
+                },
+                margin: { top: 10, left: 10, right: 10 }
+            });
+            
+            // TOTAL DE HORAS
+            const totalHoras = dataAMV.reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+            const finalY = doc.lastAutoTable.finalY + 15;
+            
+            doc.setLineWidth(0.5);
+            doc.setDrawColor(227, 6, 19);
+            doc.line(14, finalY - 5, 196, finalY - 5);
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.setTextColor(227, 6, 19);
+            doc.text(`TOTAL DE HORAS AMV: ${totalHoras.toFixed(1)}h`, 14, finalY + 5);
+            
+            // GUARDAR O PREVISUALIZAR
+            if (preview) {
+                window.open(doc.output('bloburi'), '_blank');
+                showNotification('success', 'Previsualización Abierta', `Listado AMV se abrió en una nueva ventana`, 2000);
+            } else {
+                const fileName = `Listado_AMV_${mesFrom}_${mesTo}${cliente ? '_' + cliente : ''}_${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(fileName);
+                showNotification('success', 'PDF Descargado', `Listado AMV descargado exitosamente`, 3000);
+            }
+        } catch(e) {
+            console.error("Error en generatePDFAMV:", e);
+            showNotification('error', 'Error al Generar PDF', e.message, 4000);
+        }
+    }
+
+    function generatePDFHoras(clienteName, mesFrom, mesTo, preview = false) {
+        try {
+            // Filtrar registros por cliente y rango de meses
+            const data = timeRecords.filter(r => {
+                if(!r.fecha || r.cliente !== clienteName) return false;
+                const p = r.fecha.split('-');
+                const rMonth = p[1];
+                
+                // Filtrar por rango de meses
+                if(mesFrom && mesTo) {
+                    return rMonth >= mesFrom && rMonth <= mesTo;
+                }
+                return false;
+            }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            if (data.length === 0) {
+                showNotification('warning', 'Sin Registros', 'No hay registros que coincidan con los filtros seleccionados');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // ENCABEZADO PRINCIPAL
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(24);
+            doc.setTextColor(227, 6, 19); // Rojo CONE
+            doc.text(`CONE`, 14, 15);
+            
+            // SUBTÍTULO
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            doc.setTextColor(26, 26, 26); // Negro
+            doc.text(`Consultora de Negocios Empresarios S.R.L.`, 14, 24);
+            
+            // LÍNEA SEPARADORA
+            doc.setLineWidth(0.5);
+            doc.setDrawColor(227, 6, 19);
+            doc.line(14, 27, 196, 27);
+            
+            // TÍTULO DEL REPORTE
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.setTextColor(227, 6, 19);
+            doc.text(`REPORTE DE HORAS`, 14, 35);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(26, 26, 26);
+            doc.text(`Cliente: ${clienteName}`, 14, 42);
+            const meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            doc.text(`Período: ${meses[parseInt(mesFrom)]} - ${meses[parseInt(mesTo)]}`, 14, 48);
+            const now = new Date();
+            const fechaHora = now.toLocaleDateString('es-ES') + ' ' + now.toLocaleTimeString('es-ES');
+            doc.text(`Fecha Reporte: ${fechaHora}`, 14, 54);
+            
+            // DESCRIPCIÓN DEL CLIENTE (si existe)
+            // Buscar si hay un proyecto asociado a este cliente que tenga descripción
+            const clienteProyectos = proyectos.filter(p => p.cliente === clienteName);
+            if (clienteProyectos.length > 0) {
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(10);
+                doc.setTextColor(26, 26, 26);
+                doc.text('Proyectos Asociados:', 14, 60);
+                
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(9);
+                let yPos = 59;
+                clienteProyectos.forEach(proy => {
+                    doc.text(`• ${proy.descripcion || 'Sin descripción'}`, 16, yPos);
+                    yPos += 5;
+                });
+                
+                const tableStartY = yPos + 5;
+                
+                // TABLA (Ordenada de más nueva a más vieja)
+                const tableData = data
+                    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+                    .map(r => [
+                    r.fecha.split('-').reverse().join('/'),
+                    r.solicitante || '-',
+                    r.consultor || '-',
+                    r.descripcion || '-',
+                    `${r.horas}h`
+                ]);
+                
+                doc.autoTable({
+                    startY: tableStartY,
+                    head: [['Fecha', 'Solicitante', 'Consultor', 'Descripción', 'Horas']],
+                    body: tableData,
+                    theme: 'grid',
+                    headStyles: { 
+                        fillColor: [227, 6, 19],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold',
+                        fontSize: 11,
+                        halign: 'center'
+                    },
+                    bodyStyles: { fontSize: 10 },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    columnStyles: {
+                        0: { cellWidth: 25, halign: 'center' },
+                        1: { cellWidth: 28 },
+                        2: { cellWidth: 28 },
+                        3: { cellWidth: 55 },
+                        4: { cellWidth: 20, halign: 'right', fontStyle: 'bold' }
+                    },
+                    margin: { top: 10, left: 10, right: 10 }
+                });
+            } else {
+                // Si no hay proyectos, mostrar tabla normal
+                const tableData = data
+                    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+                    .map(r => [
+                    r.fecha.split('-').reverse().join('/'),
+                    r.solicitante || '-',
+                    r.consultor || '-',
+                    r.descripcion || '-',
+                    `${r.horas}h`
+                ]);
+                
+                doc.autoTable({
+                    startY: 54,
+                    head: [['Fecha', 'Solicitante', 'Consultor', 'Descripción', 'Horas']],
+                    body: tableData,
+                    theme: 'grid',
+                    headStyles: { 
+                        fillColor: [227, 6, 19],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold',
+                        fontSize: 11,
+                        halign: 'center'
+                    },
+                    bodyStyles: { fontSize: 10 },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    columnStyles: {
+                        0: { cellWidth: 25, halign: 'center' },
+                        1: { cellWidth: 28 },
+                        2: { cellWidth: 28 },
+                        3: { cellWidth: 55 },
+                        4: { cellWidth: 20, halign: 'right', fontStyle: 'bold' }
+                    },
+                    margin: { top: 10, left: 10, right: 10 }
+                });
+            }
+            
+            // TOTAL DE HORAS
+            const totalHoras = data.reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+            const finalY = doc.lastAutoTable.finalY + 15;
+            
+            doc.setLineWidth(0.5);
+            doc.setDrawColor(227, 6, 19);
+            doc.line(14, finalY - 5, 196, finalY - 5);
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.setTextColor(227, 6, 19);
+            doc.text(`TOTAL DE HORAS: ${totalHoras.toFixed(1)}h`, 14, finalY + 5);
+            
+            // GUARDAR O PREVISUALIZAR
+            if (preview) {
+                window.open(doc.output('bloburi'), '_blank');
+                showNotification('success', 'Previsualización Abierta', `Reporte de ${clienteName} se abrió en una nueva ventana`, 2000);
+            } else {
+                const fileName = `Reporte_${clienteName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(fileName);
+                showNotification('success', 'PDF Descargado', `Reporte de ${clienteName} descargado exitosamente`, 3000);
+            }
+        } catch(e) {
+            console.error("Error en generatePDFHoras:", e);
+            showNotification('error', 'Error al Generar PDF', e.message, 4000);
+        }
+    }
+
+    function generatePDFProyecto(proyectoId, preview = false) {
+        try {
+            // Buscar el proyecto
+            const proyecto = proyectos.find(p => String(p.id) === String(proyectoId));
+            if (!proyecto) {
+                showNotification('error', 'Error', 'Proyecto no encontrado');
+                return;
+            }
+            
+            // Obtener todos los registros de este proyecto
+            const registrosProyecto = timeRecords.filter(r => String(r.proyectoId) === String(proyectoId));
+            
+            // Calcular horas consumidas por tipo
+            const horasRemotasConsumidas = registrosProyecto
+                .filter(r => r.tipo === 'Remoto')
+                .reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+            
+            const horasPresencialesConsumidas = registrosProyecto
+                .filter(r => r.tipo === 'Presencial')
+                .reduce((sum, r) => sum + (parseFloat(r.horas) || 0), 0);
+            
+            const horasRemotasRestantes = (parseFloat(proyecto.horasRemotasPresupuestadas) || 0) - horasRemotasConsumidas;
+            const horasPresencialesRestantes = (parseFloat(proyecto.horasPresencialesPresupuestadas) || 0) - horasPresencialesConsumidas;
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // ENCABEZADO PRINCIPAL
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(24);
+            doc.setTextColor(227, 6, 19); // Rojo CONE
+            doc.text(`CONE`, 14, 15);
+            
+            // SUBTÍTULO
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            doc.setTextColor(26, 26, 26); // Negro
+            doc.text(`Consultora de Negocios Empresarios S.R.L.`, 14, 24);
+            
+            // LÍNEA SEPARADORA
+            doc.setLineWidth(0.5);
+            doc.setDrawColor(227, 6, 19);
+            doc.line(14, 27, 196, 27);
+            
+            // TÍTULO DEL REPORTE
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.setTextColor(227, 6, 19);
+            doc.text(`REPORTE DE PROYECTO`, 14, 35);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(26, 26, 26);
+            doc.text(`Proyecto: ${proyecto.descripcion || 'Sin descripción'}`, 14, 42);
+            doc.text(`ID Proyecto: ${proyecto.id}`, 14, 48);
+            doc.text(`Cliente: ${proyecto.cliente}`, 14, 54);
+            const now = new Date();
+            const fechaHora = now.toLocaleDateString('es-ES') + ' ' + now.toLocaleTimeString('es-ES');
+            doc.text(`Fecha Reporte: ${fechaHora}`, 14, 60);
+            
+            // TABLA CON INFORMACIÓN DEL PROYECTO
+            const infoData = [
+                ['Fecha de Creación', proyecto.fechaCreacion || '-'],
+                ['Cliente', proyecto.cliente || '-'],
+                ['Horas Remotas Presupuestadas', `${proyecto.horasRemotasPresupuestadas || 0}h`],
+                ['Horas Presenciales Presupuestadas', `${proyecto.horasPresencialesPresupuestadas || 0}h`],
+                ['Fecha de Entrega', proyecto.fechaEntrega || '-'],
+                ['Estado', proyecto.estado || 'Pendiente']
+            ];
+            
+            doc.autoTable({
+                startY: 65,
+                head: [['Concepto', 'Valor']],
+                body: infoData,
+                theme: 'grid',
+                headStyles: { 
+                    fillColor: [227, 6, 19],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    fontSize: 11,
+                    halign: 'center'
+                },
+                bodyStyles: { fontSize: 10 },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
+                columnStyles: {
+                    0: { cellWidth: 50, fontStyle: 'bold' },
+                    1: { cellWidth: 100, halign: 'left' }
+                },
+                margin: { top: 10, left: 10, right: 10 }
+            });
+            
+            // TABLA DE REGISTROS (CON TIPO) - Ordenada de más nueva a más vieja
+            const tableData = registrosProyecto
+                .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+                .map(r => [
+                r.fecha.split('-').reverse().join('/'),
+                r.solicitante || '-',
+                r.consultor || '-',
+                r.descripcion || '-',
+                r.tipo || 'Remoto',
+                `${r.horas}h`
+            ]);
+            
+            const startYRegistros = doc.lastAutoTable.finalY + 15;
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(12);
+            doc.setTextColor(26, 26, 26);
+            doc.text('Registros de Horas:', 14, startYRegistros);
+            
+            if (tableData.length > 0) {
+                doc.autoTable({
+                    startY: startYRegistros + 5,
+                    head: [['Fecha', 'Solicitante', 'Consultor', 'Descripción', 'Tipo', 'Horas']],
+                    body: tableData,
+                    theme: 'grid',
+                    headStyles: { 
+                        fillColor: [227, 6, 19],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold',
+                        fontSize: 10,
+                        halign: 'center'
+                    },
+                    bodyStyles: { fontSize: 9 },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    columnStyles: {
+                        0: { cellWidth: 18, halign: 'center' },
+                        1: { cellWidth: 28 },
+                        2: { cellWidth: 28 },
+                        3: { cellWidth: 50 },
+                        4: { cellWidth: 18, halign: 'center' },
+                        5: { cellWidth: 15, halign: 'right', fontStyle: 'bold' }
+                    },
+                    margin: { top: 10, left: 10, right: 10 }
+                });
+                
+                // TOTAL FINAL CON HORAS RESTANTES
+                const finalYRegistros = doc.lastAutoTable.finalY + 10;
+                const horasConsumidasTotales = horasRemotasConsumidas + horasPresencialesConsumidas;
+                
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(11);
+                doc.setTextColor(227, 6, 19);
+                doc.text(`TOTAL DE HORAS CONSUMIDAS: ${horasConsumidasTotales.toFixed(1)}h`, 14, finalYRegistros);
+                
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(10);
+                doc.setTextColor(26, 26, 26);
+                doc.text(`Horas Remotas Restantes: ${horasRemotasRestantes.toFixed(1)}h`, 14, finalYRegistros + 8);
+                doc.text(`Horas Presenciales Restantes: ${horasPresencialesRestantes.toFixed(1)}h`, 14, finalYRegistros + 15);
+            } else {
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(10);
+                doc.text('No hay registros de horas para este proyecto', 14, startYRegistros + 10);
+            }
+            
+            // GUARDAR O PREVISUALIZAR
+            if (preview) {
+                window.open(doc.output('bloburi'), '_blank');
+                showNotification('success', 'Previsualización Abierta', `Reporte del proyecto se abrió en una nueva ventana`, 2000);
+            } else {
+                const fileName = `Reporte_Proyecto_${proyecto.id}_${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(fileName);
+                showNotification('success', 'PDF Descargado', `Reporte del proyecto ${proyecto.descripcion} descargado exitosamente`, 3000);
+            }
+        } catch(e) {
+            console.error("Error en generatePDFProyecto:", e);
+            showNotification('error', 'Error al Generar PDF', e.message, 4000);
+        }
+    }
+
+    // Event listener para cambiar tipo de reporte
+    document.getElementById('reportType').addEventListener('change', function() {
+        const reportType = this.value;
+        const selectorProyecto = document.getElementById('selectorProyecto');
+        const selectorAMV = document.getElementById('selectorAMV');
+        const selectorHoras = document.getElementById('selectorHoras');
+        
+        if (reportType === 'horas') {
+            // Mostrar selector para Horas por Cliente
+            selectorProyecto.style.display = 'none';
+            selectorAMV.style.display = 'none';
+            selectorHoras.style.display = 'block';
+            
+            // Llenar selector de clientes
+            const clientes = [...new Set(timeRecords.map(r => r.cliente).filter(Boolean))].sort();
+            let opciones = '<option value="">Seleccionar cliente...</option>';
+            clientes.forEach(c => {
+                opciones += `<option value="${c}">${c}</option>`;
+            });
+            document.getElementById('reportHorasCliente').innerHTML = opciones;
+        } else if (reportType === 'proyecto') {
+            // Mostrar selector de proyectos
+            selectorProyecto.style.display = 'block';
+            selectorAMV.style.display = 'none';
+            selectorHoras.style.display = 'none';
+            // Llenar selector de proyectos
+            document.getElementById('reportProyecto').innerHTML = '<option value="">Seleccionar proyecto...</option>' + 
+                proyectos.map(p => `<option value="${p.id}">${p.descripcion} - ${p.cliente}</option>`).join('');
+        } else if (reportType === 'amv') {
+            // Mostrar selector de meses para AMV
+            selectorProyecto.style.display = 'none';
+            selectorAMV.style.display = 'block';
+            selectorHoras.style.display = 'none';
+            
+            // Esperar un pequeño momento para asegurar que el DOM está actualizado
+            setTimeout(() => {
+                // Llenar selector de clientes con registros AMV
+                const clientesAMV = [];
+                timeRecords.forEach(r => {
+                    if (esAMV(r.proyectoId) && r.cliente && !clientesAMV.includes(r.cliente)) {
+                        clientesAMV.push(r.cliente);
+                    }
+                });
+                clientesAMV.sort();
+                
+                let opciones = '<option value="">Todos los Clientes</option>';
+                clientesAMV.forEach(c => {
+                    opciones += `<option value="${c}">${c}</option>`;
+                });
+                
+                document.getElementById('reportAMVCliente').innerHTML = opciones;
+            }, 100);
+        } else {
+            // Ocultar ambos selectores para "Horas por Cliente"
+            selectorProyecto.style.display = 'none';
+            selectorAMV.style.display = 'none';
+        }
+    });
+    
+    // Eventos de filtros
+    // ===== LÓGICA DE CASCADA PARA FILTROS =====
+    
+    // Cuando se selecciona "Desde Día", mostrar "Hasta Día"
+    document.getElementById('fDayFrom').addEventListener('change', function() {
+        const dayToContainer = document.getElementById('dayToContainer');
+        const dayToSelect = document.getElementById('fDayTo');
+        
+        if (this.value) {
+            // Mostrar container
+            dayToContainer.style.display = 'block';
+            // Establecer el valor mínimo en "Hasta Día"
+            dayToSelect.value = this.value;
+        } else {
+            // Ocultar container
+            dayToContainer.style.display = 'none';
+            dayToSelect.value = '';
+        }
+        
+        renderList();
+    });
+
+    // Cuando se selecciona "Desde Mes", mostrar "Hasta Mes"
+    document.getElementById('fMonthFrom').addEventListener('change', function() {
+        const monthToContainer = document.getElementById('monthToContainer');
+        const monthToSelect = document.getElementById('fMonthTo');
+        
+        if (this.value) {
+            // Mostrar container
+            monthToContainer.style.display = 'block';
+            // Establecer el valor mínimo en "Hasta Mes"
+            monthToSelect.value = this.value;
+        } else {
+            // Ocultar container
+            monthToContainer.style.display = 'none';
+            monthToSelect.value = '';
+        }
+        
+        renderList();
+    });
+
+    // Cuando cambia "Hasta Día"
+    document.getElementById('fDayTo').addEventListener('change', renderList);
+
+    // Cuando cambia "Hasta Mes"
+    document.getElementById('fMonthTo').addEventListener('change', renderList);
+
+    // Eventos para Año y Cliente
+    document.getElementById('fYear').addEventListener('change', renderList);
+    document.getElementById('fClient').addEventListener('change', renderList);
+    document.getElementById('date').valueAsDate = new Date();
+    
+    // INICIALIZAR FILTROS CON LA FECHA DE HOY
+    const today = new Date();
+    const todayDay = String(today.getDate()).padStart(2, '0');
+    const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const todayYear = today.getFullYear().toString();
+    
+    // Obtener el último día del mes actual
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const lastDayOfMonthStr = String(lastDayOfMonth).padStart(2, '0');
+    
+    // Inicializar rango: desde hoy hasta el último día del mes
+    document.getElementById('fDayFrom').value = todayDay;
+    document.getElementById('fDayTo').value = lastDayOfMonthStr;
+    document.getElementById('fMonthFrom').value = todayMonth;
+    document.getElementById('fMonthTo').value = todayMonth;
+    document.getElementById('fYear').value = todayYear;
+</script>
+</body>
+</html>

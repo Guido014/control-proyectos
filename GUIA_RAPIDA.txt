@@ -1,0 +1,79 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    CONE - GUÍA DE INSTALACIÓN RÁPIDA
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 PASOS RÁPIDOS PARA INSTALAR:
+
+1️⃣  DESCARGA NODE.JS
+   → https://nodejs.org (versión LTS recomendada)
+   → Instala normalmente
+
+2️⃣  ABRE LA CARPETA DEL PROYECTO EN VS CODE
+   → Descarga VS Code: https://code.visualstudio.com
+   → Abre la carpeta "cone-proyecto"
+   → Presiona Ctrl+` (o Ctrl+Shift+ñ) para abrir la terminal
+
+3️⃣  INSTALA DEPENDENCIAS
+   En la terminal, escribe:
+   → npm install
+
+4️⃣  INICIA EL SERVIDOR
+   En la terminal, escribe:
+   → npm start
+   
+   Verás algo como:
+   "Starting up http-server, serving ./ on port 8080"
+
+5️⃣  ABRE EN TU NAVEGADOR
+   → http://localhost:8080
+   → Usuario: bejerman23+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⚙️  CONFIGURACIÓN GOOGLE SHEETS (Importante)
+
+1. Abre tu Google Sheet "CONE"
+2. Ve a: Extensiones > Apps Script
+3. Copia el código de "google-sheets-script.gs"
+4. En Apps Script, borra todo y pega el código
+5. Guardar y Deploy > Implementación nueva > Ejecutable web
+6. Autoriza y copia la URL
+7. En index.html, línea ~1000, busca:
+   const SCRIPT_URL = "TU_URL_AQUI";
+8. Reemplaza "TU_URL_AQUI" con la URL que copiaste
+9. Guarda (Ctrl+S) y recarga la página en el navegador
+
+═══════════════════════════════════════════════════════════════════════════════
+
+❓ PROBLEMAS COMUNES
+
+"npm no se reconoce"
+→ Node.js no está instalado correctamente
+→ Reinicia VS Code después de instalar Node
+
+"Error al conectar a Google Sheets"
+→ La URL de SCRIPT_URL está mal o está vacía
+→ Verifica que pegaste correctamente la URL del Apps Script
+
+"Los botones no funcionan"
+→ Presiona F12 para abrir la consola
+→ Mira si hay errores rojos
+→ Limpia caché: Ctrl+Shift+Supr
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📚 DOCUMENTACIÓN COMPLETA
+
+Para instrucciones detalladas, abre:
+→ docs/SETUP.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ LISTO PARA USAR
+
+Una vez que todo esté configurado:
+- npm start → Inicia el servidor
+- http://localhost:8080 → Abre la aplicación
+- F12 → Abre la consola si hay problemas
+
+═══════════════════════════════════════════════════════════════════════════════
